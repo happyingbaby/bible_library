@@ -11,8 +11,8 @@ from app.models import Session, User, now
 hasher = PasswordHasher()
 
 def password_hash(password):
-    if not 10 <= len(password) <= 128:
-        raise HTTPException(422, '密码需为 10 至 128 个字符')
+    if not 6 <= len(password) <= 128:
+        raise HTTPException(422, '密码需为 6 至 128 个字符')
     return hasher.hash(password)
 
 def verify(password, encoded):
