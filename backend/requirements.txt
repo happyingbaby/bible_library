@@ -8,3 +8,6 @@ python-multipart>=0.0.20
 markdown-it-py>=3,<5
 alembic>=1.14,<2
 pypandoc_binary>=1.15,<2
+
+# Standalone scripture collector (exact version is already in requirements-lock.txt).
+httpx>=0.28,<1

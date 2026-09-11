@@ -1,0 +1,22 @@
+{
+  "translation_id": 1,
+  "chapters": [
+    {
+      "book": "Gen",
+      "chapter": 1,
+      "url": "https://live.lxfyt.cn/shengjing/genesis_1_1.html",
+      "verses": 31,
+      "changed": 0,
+      "skipped": 0,
+      "status": "dry_run"
+    }
+  ],
+  "totals": {
+    "chapters": 1,
+    "verses": 31,
+    "changed": 0,
+    "skipped": 0,
+    "failed": 0
+  },
+  "elapsed_sec": 0.2
+}
