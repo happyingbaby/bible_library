@@ -1,0 +1,13 @@
+.venv/
+node_modules/
+dist/
+release/
+backend/build/
+backend/dist/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.spec
+.env
+.data/
+.DS_Store

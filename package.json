@@ -1,0 +1,56 @@
+{
+  "name": "scripture-lecture-library",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline Bible lecture library",
+  "author": "Bible Lecture Library",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "web": "npm run build && node scripts/web.cjs",
+    "test:web": "node --test scripts/web.test.cjs",
+    "dev": "node scripts/dev.cjs",
+    "build": "tsc --noEmit -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts",
+    "desktop": "electron .",
+    "package:mac": "npm run build && .venv/bin/python backend/scripts/package_backend.py && electron-builder --mac --dir --config.electronDist=node_modules/electron/dist",
+    "test:backend": "PYTHONPATH=backend .venv/bin/python -m pytest backend/tests -q",
+    "dev:frontend": "vite --config frontend/vite.config.ts"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "vite": "^6.1.0",
+    "typescript": "^5.7.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "local.scripture.library",
+    "productName": "圣经讲义",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "frontend/dist/**/*",
+      "desktop/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist/bible-backend",
+        "to": "backend"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.reference",
+      "target": [
+        "dir"
+      ]
+    }
+  }
+}
