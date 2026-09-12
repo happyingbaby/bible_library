@@ -21,3 +21,4 @@
 .bible-verses article{grid-template-columns:25px minmax(0,1fr) 86px}
 .bible-verses article>div{flex-direction:row;justify-content:flex-end;gap:5px}
 .bible-verses article>div button{white-space:nowrap}
+.editor-metadata .row+.row{margin-top:12px}
