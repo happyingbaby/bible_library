@@ -13,12 +13,12 @@ app.on('second-instance', () => { if(window) {window.show(); window.focus();} })
 function freePort() { return new Promise((resolve,reject) => {const server = net.createServer();server.once('error',reject);server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});}); }
 async function launchBackend() {
   port = await freePort();
-  const command = app.isPackaged ? path.join(process.resourcesPath,'backend','bible-backend') : path.join(root,'.venv','bin','python');
+  const command = app.isPackaged ? path.join(process.resourcesPath,'backend','bible-backend') : path.join(root,'backend','.venv','bin','python');
   const args = app.isPackaged ? [] : [path.join(root,'backend','launcher.py')];
   const dataDir = path.join(app.getPath('userData'), 'library');
   fs.mkdirSync(dataDir,{recursive:true,mode:0o700});
   backend = spawn(command,args,{cwd: app.isPackaged ? process.resourcesPath : root,env:{...process.env,BIBLE_APP_KEY:key,BIBLE_PORT:String(port),BIBLE_DATA_DIR:dataDir,PYTHONUNBUFFERED:'1'},stdio:['ignore','pipe','pipe']});
-  backend.on('error',()=>{backendError='无法启动 Python 服务。开发环境请先安装 .venv 依赖；安装版请重新安装应用。';});
+  backend.on('error',()=>{backendError='无法启动 Python 服务。开发环境请先运行 npm run sync:backend；安装版请重新安装应用。';});
   backend.on('exit',()=>{if(!closing) {backendError='本地服务已停止，请重新启动应用。';window?.webContents.send('backend-error',backendError);}});
   // Consume pipes to avoid blocking without persisting credentials or request bodies.
   backend.stdout.on('data',()=>{});

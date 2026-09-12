@@ -67,7 +67,7 @@ async function main() {
   // Claim the web port before starting a backend that can apply migrations.
   const port = await listen(server, Number(process.env.BIBLE_WEB_PORT || 5173));
   const dataDir = process.env.BIBLE_DATA_DIR || path.join(os.homedir(), 'Library/Application Support/圣经讲义/library');
-  const backend = spawn(path.join(root, '.venv/bin/python'), [path.join(root, 'backend/launcher.py')], {
+  const backend = spawn(path.join(root, 'backend/.venv/bin/python'), [path.join(root, 'backend/launcher.py')], {
     cwd:root, env:{...process.env, BIBLE_DATA_DIR:dataDir, BIBLE_APP_KEY:key, BIBLE_PORT:String(backendPort)},
     stdio:['ignore','ignore','ignore']
   });
@@ -78,7 +78,7 @@ async function main() {
   };
   process.on('SIGINT', () => stop());
   process.on('SIGTERM', () => stop());
-  backend.on('error', () => {console.error('无法启动 Python 服务，请检查 .venv 依赖。');stop(1);});
+  backend.on('error', () => {console.error('无法启动 Python 服务，请先运行 npm run sync:backend。');stop(1);});
   backend.on('exit', () => {if(!stopped){console.error('本地服务已停止。');stop(1);}});
   for (let i=0;i<100 && !stopped;i++) {
     try {

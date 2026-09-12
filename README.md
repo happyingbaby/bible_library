@@ -49,29 +49,45 @@ backend/                # Python 后端
 ├── tests/              # 隔离回归测试
 ├── scripts/            # 打包、预览和数据库验证工具
 ├── launcher.py
-├── requirements.txt
-└── requirements-lock.txt
+├── pyproject.toml      # 运行依赖、测试及打包依赖组
+├── uv.lock             # uv 生成的精确版本与校验哈希
+└── .python-version     # 开发 Python 版本
 desktop/                # Electron 桌面外壳
 scripts/                # 联合启动、本机网页网关及其测试
 package.json            # 统一命令、JS 依赖与桌面打包配置
 ```
 
-`npm run dev:frontend` 单独启动前端开发服务器；`npm run dev` 联合启动前端和 Electron 管理的后端。隔离界面验证时，在两个终端分别执行 `.venv/bin/python backend/scripts/preview_backend.py` 和 `VITE_APP_KEY=bible-local-preview-key npm run dev:frontend`，并先确认未继承正式 `DATABASE_URL`。
+`npm run dev:frontend` 单独启动前端开发服务器；`npm run dev` 联合启动前端和 Electron 管理的后端。隔离界面验证时，在两个终端分别执行 `uv run --project backend --locked python backend/scripts/preview_backend.py` 和 `VITE_APP_KEY=bible-local-preview-key npm run dev:frontend`，并先确认未继承正式 `DATABASE_URL`。
 
 ## 安装和开发
 
 首版安装包为当前机器架构 **Intel x64**，尚未 Apple Developer 签名或公证。Apple Silicon 需要在目标架构环境另行构建并验证，不将当前产物称为通用安装包。
 
-开发需要 Node.js（建议 22.12+）、Python 3.12+ 和 MySQL 8.4。当前机器使用 Node 20.20.2、Python 3.14.6 完成构建；electron-builder 的间接依赖会对 Node 20 给出引擎版本提示。
+开发需要 Node.js（建议 22.12+）、uv、Python 3.14+ 和 MySQL（本机验证版本为 8.4）。当前机器使用 Node 20.20.2、Python 3.14.6 完成构建；electron-builder 的间接依赖会对 Node 20 给出引擎版本提示。
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -r backend/requirements-lock.txt
+uv sync --project backend --locked
 npm ci
 npm run dev
 ```
 
 Electron 启动并管理 Python 服务，不需另开后端终端。开发和安装版默认使用同一个应用资料目录。
+
+先按 [uv 官方说明](https://docs.astral.sh/uv/getting-started/installation/) 安装 uv。项目通过 `backend/.python-version` 选择 Python 3.14.6，缺失时 uv 会下载对应解释器。虚拟环境统一位于 `backend/.venv`；旧根目录 `.venv` 不再使用，可自行清理。依赖源沿用中科大 PyPI 镜像并在项目中明确配置。
+
+`npm run dev`、`npm run desktop`、`npm run web` 启动前自动执行 `npm run sync:backend`，使用 `--locked` 校验锁文件。桌面和网页启动器直接调用 uv 管理的 Python，确保退出时能终止后端。安装版仍使用独立打包服务，无需 uv。
+
+依赖维护（根目录执行，提交 `pyproject.toml` 和 `uv.lock`）：
+
+```bash
+uv add --project backend 包名
+uv add --project backend --dev 测试工具名
+uv add --project backend --group build 打包工具名
+uv lock --project backend --upgrade-package 包名
+npm run test:backend
+```
+
+默认同步运行和测试依赖；`npm run package:backend` 自动启用 `build` 组。仅需运行依赖时可使用 `uv sync --project backend --locked --no-dev`。原 requirements 文件已移除；若外部工具需要该格式，使用 `uv export --project backend --locked --all-groups --format requirements-txt --output-file /tmp/bible-requirements.txt` 临时导出。
 
 构建：
 

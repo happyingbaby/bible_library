@@ -15,6 +15,7 @@
 
 以下为本次开发环境和锁文件中已核实的版本；更新依赖时同步更新锁文件。
 
+- Python 依赖管理：uv `0.12.5`（本机验证）；使用 `backend/pyproject.toml` 与 `backend/uv.lock`。
 - 开发运行时：Node.js `20.20.2`、Python `3.14.6`；本机已验证 MySQL `8.4.11`。
 - 前端：React / React DOM `19.3.0`、TypeScript `5.9.3`、Vite `6.4.3`。
 - 桌面：Electron `40.10.2`、electron-builder `26.15.3`。
@@ -24,18 +25,17 @@
 - 文档：pypandoc_binary `1.17`、markdown-it-py `4.2.0`。
 - 密码：argon2-cffi `25.1.0`；Python 打包：PyInstaller `6.22.2`。
 - 测试：pytest `9.1.1`、httpx `0.28.1`。
-- JS 精确版本以 `package-lock.json` 为准；Python 精确版本以 `backend/requirements-lock.txt` 为准。
-- `backend/requirements.txt` 记录依赖范围；Python 锁文件还包含测试与打包工具。
+- JS 精确版本以 `package-lock.json` 为准；Python 精确版本以 `backend/uv.lock` 为准。
+- `backend/pyproject.toml` 记录运行依赖及 `dev`（测试）、`build`（打包）依赖组；`backend/uv.lock` 由 uv 生成，不手工编辑。
 - Node 20 已完成构建，但部分打包依赖声明要求 Node `22.12+`；切换运行时后重新验证构建。
 - 远程 MySQL 的实际版本：MySQL5.7.40；不得把本机 MySQL 的版本当成远程版本。
 
 ## 3. 安装、运行、测试与构建
 
-所有命令均在项目根目录执行。
+所有命令均在项目根目录执行。先安装 uv；`backend/.python-version` 固定开发 Python 版本，虚拟环境为 `backend/.venv`。开发、桌面及网页 npm 入口会先以 `--locked` 同步依赖；打包通过 `uv run --group build` 包含 PyInstaller。安装版无需 uv。
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -r backend/requirements-lock.txt
+uv sync --project backend --locked
 npm ci
 npm run dev
 ```
@@ -54,7 +54,7 @@ npm run build
 npm run package:mac
 ```
 
-- `test:backend` 通过 `PYTHONPATH=backend` 执行 pytest，使用临时 SQLite 数据库。
+- `test:backend` 通过 `uv run --project backend --locked` 执行 pytest，使用临时 SQLite 数据库；导入路径由 `backend/pyproject.toml` 配置。
 - `build` 先执行 TypeScript 检查，再生成 `frontend/dist/`。
 - `package:mac` 重新构建前端、用 PyInstaller 打包后端，再用 electron-builder 生成 `.app`。
 - 打包包含 Python 服务、Pandoc、数据库驱动及 Alembic 迁移；不能遗漏这些运行资源。
@@ -64,11 +64,11 @@ npm run package:mac
 隔离的浏览器界面验证分别在两个终端启动：
 
 ```bash
-.venv/bin/python backend/scripts/preview_backend.py
+uv run --project backend --locked python backend/scripts/preview_backend.py
 VITE_APP_KEY=bible-local-preview-key npm run dev:frontend
 ```
 
-- 仅在隔离预览服务运行后，执行 `.venv/bin/python backend/scripts/seed_preview.py` 写入测试样例。
+- 仅在隔离预览服务运行后，执行 `uv run --project backend --locked python backend/scripts/seed_preview.py` 写入测试样例。
 - 预览脚本使用 `/private/tmp` 下的 SQLite 和资料目录，端口为 `8765`。
 - 启动预览前确认环境未继承正式 `DATABASE_URL`；预览脚本使用 `setdefault`，不会覆盖已有变量。
 - 测试密钥和测试账户不得用于正式桌面服务，也不得误写成正式管理员信息。

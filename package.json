@@ -11,9 +11,14 @@
     "dev": "node scripts/dev.cjs",
     "build": "tsc --noEmit -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts",
     "desktop": "electron .",
-    "package:mac": "npm run build && .venv/bin/python backend/scripts/package_backend.py && electron-builder --mac --dir --config.electronDist=node_modules/electron/dist",
-    "test:backend": "PYTHONPATH=backend .venv/bin/python -m pytest backend/tests -q",
-    "dev:frontend": "vite --config frontend/vite.config.ts"
+    "package:mac": "npm run build && npm run package:backend && electron-builder --mac --dir --config.electronDist=node_modules/electron/dist",
+    "test:backend": "uv run --project backend --locked python -m pytest backend/tests -q",
+    "dev:frontend": "vite --config frontend/vite.config.ts",
+    "sync:backend": "uv sync --project backend --locked",
+    "predev": "npm run sync:backend",
+    "predesktop": "npm run sync:backend",
+    "preweb": "npm run sync:backend",
+    "package:backend": "uv run --project backend --locked --group build python backend/scripts/package_backend.py"
   },
   "dependencies": {
     "react": "^19.0.0",
