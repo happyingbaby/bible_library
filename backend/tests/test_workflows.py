@@ -12,7 +12,7 @@ from conftest import login
 
 
 def create_lecture(client, text='# 第一课\n\n阅读【创1:1-3】。'):
-    response = client.post('/api/lectures', json={'title': '创世记讲义', 'markdown': text, 'category': '旧约', 'tags': ['创世记']})
+    response = client.post('/api/lectures', json={'title': '创世记讲义', 'author': '张牧师', 'sermon_date': '2026-09-12', 'markdown': text, 'category': '旧约', 'tags': ['创世记']})
     assert response.status_code == 200, response.text
     return response.json()
 
@@ -128,13 +128,17 @@ def test_reference_exclusions_and_invalid():
 
 def test_edit_history_export_and_index(client, admin):
     lecture = create_lecture(client)
-    response = client.put(f'/api/lectures/{lecture["id"]}', json={'title':'修改','markdown':'新内容（约3:16）','revision':lecture['revision'],'category':'新约','tags':['标签']})
+    assert lecture['author'] == '张牧师' and lecture['sermon_date'] == '2026-09-12'
+    response = client.put(f'/api/lectures/{lecture["id"]}', json={'title':'修改','author':'李牧师','sermon_date':'2026-09-13','markdown':'新内容（约3:16）','revision':lecture['revision'],'category':'新约','tags':['标签']})
     assert response.status_code == 200, response.text
+    assert response.json()['author'] == '李牧师' and response.json()['sermon_date'] == '2026-09-13'
+    assert len(client.get('/api/lectures?q=李牧师').json()) == 1
     assert client.put(f'/api/lectures/{lecture["id"]}', json={'title':'过期','markdown':'','revision':1}).status_code == 409
     versions = client.get(f'/api/lectures/{lecture["id"]}/history').json()
     assert len(versions) == 2
     result = client.post(f'/api/lectures/{lecture["id"]}/history/{versions[-1]["id"]}/restore').json()
     assert result['markdown'] == lecture['markdown']
+    assert result['author'] == '张牧师' and result['sermon_date'] == '2026-09-12'
     assert result['revision'] == 3
     assert len(client.get(f'/api/lectures/{lecture["id"]}/history').json()) == 3
     assert client.get(f'/api/lectures/{lecture["id"]}/export').text == lecture['markdown']
@@ -150,9 +154,10 @@ def test_markdown_import_and_duplicates(client, admin):
     preview = client.post('/api/imports/preview', files={'file':('讲义.md',markdown.encode(),'text/markdown')})
     assert preview.status_code == 200, preview.text
     assert preview.json()['markdown'] == markdown
-    confirmed = client.post('/api/imports/confirm', json={'preview_id':preview.json()['preview_id'],'title':'导入讲义'})
+    confirmed = client.post('/api/imports/confirm', json={'preview_id':preview.json()['preview_id'],'title':'导入讲义','author':'王牧师','sermon_date':'2026-09-10'})
     assert confirmed.status_code == 200
     assert confirmed.json()['published'] is False
+    assert confirmed.json()['author'] == '王牧师' and confirmed.json()['sermon_date'] == '2026-09-10'
     assert client.get(f'/api/lectures/{confirmed.json()["id"]}/original').content == markdown.encode()
     assert client.post('/api/imports/confirm', json={'preview_id':preview.json()['preview_id'],'title':'再次确认'}).status_code == 404
     assert client.post('/api/imports/preview', files={'file':('bad.docx',b'bad')}).status_code == 422
@@ -202,7 +207,7 @@ def test_scripture_diff_validation_and_missing(client, admin):
 
 def test_backup_restore_roundtrip(client, admin):
     preview = client.post('/api/imports/preview', files={'file':('original.md', '# 原始【创1:1】'.encode())}).json()
-    lecture = client.post('/api/imports/confirm',json={'preview_id':preview['preview_id'],'title':'原始'}).json()
+    lecture = client.post('/api/imports/confirm',json={'preview_id':preview['preview_id'],'title':'原始','author':'张牧师','sermon_date':'2026-09-12'}).json()
     create_reader(client)
     p = client.post('/api/translations/preview',json=scripture_payload()).json()
     client.post('/api/translations/confirm',json={'preview_id':p['preview_id']})
@@ -210,7 +215,20 @@ def test_backup_restore_roundtrip(client, admin):
     assert backup.status_code == 200, backup.text if backup.status_code != 200 else ''
     with zipfile.ZipFile(io.BytesIO(backup.content)) as archive:
         data = json.loads(archive.read('database.json'))
+        assert data['version'] == 2
+        assert data['tables']['lectures'][0]['author'] == '张牧师'
         assert 'sessions' not in data['tables'] and 'password' not in data['tables']['users'][0]
+        original = archive.read('originals/' + data['tables']['lectures'][0]['original_file'])
+    legacy = io.BytesIO()
+    data['version'] = 1
+    for table_name in ('lectures', 'histories'):
+        for row in data['tables'][table_name]:
+            row.pop('author')
+            row.pop('sermon_date')
+    with zipfile.ZipFile(legacy, 'w') as archive:
+        archive.writestr('database.json', json.dumps(data))
+        archive.writestr('originals/' + data['tables']['lectures'][0]['original_file'], original)
+    assert client.post('/api/backups/preview', files={'file': ('legacy.zip', legacy.getvalue())}).status_code == 200
     create_lecture(client,'new')
     restore = client.post('/api/backups/preview',files={'file':('backup.zip',backup.content)})
     assert restore.status_code == 200, restore.text

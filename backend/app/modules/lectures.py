@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import uuid
 import zipfile
+from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -20,6 +21,8 @@ MAX_UPLOAD = 20 * 1024 * 1024
 
 class Content(BaseModel):
     title: str = Field(min_length=1, max_length=255)
+    author: str = Field(default='', max_length=100)
+    sermon_date: date | None = None
     markdown: str = Field(max_length=2_000_000)
     category: str = Field(default='', max_length=100)
     tags: list[str] = Field(default_factory=list, max_length=30)
@@ -31,6 +34,8 @@ class Preview(BaseModel):
 class Confirm(BaseModel):
     preview_id: str = Field(pattern=r'^[a-f0-9]{32}$')
     title: str = Field(min_length=1, max_length=255)
+    author: str = Field(default='', max_length=100)
+    sermon_date: date | None = None
 
 class Publish(BaseModel):
     published: bool
@@ -47,7 +52,7 @@ def visible(db, lecture_id, user):
 
 
 def serialize(lecture, detail=False):
-    keys = ['id', 'title', 'category', 'tags', 'published', 'deleted', 'revision', 'created_by', 'updated_by', 'created_at', 'updated_at']
+    keys = ['id', 'title', 'author', 'sermon_date', 'category', 'tags', 'published', 'deleted', 'revision', 'created_by', 'updated_by', 'created_at', 'updated_at']
     result = {k: getattr(lecture, k) for k in keys}
     if detail:
         result.update(markdown=lecture.markdown, import_report=lecture.import_report, has_original=bool(lecture.original_file), original_extension=Path(lecture.original_file).suffix if lecture.original_file else '', **render(lecture.markdown))
@@ -61,7 +66,7 @@ def index(db, lecture):
 
 
 def history(db, lecture, user):
-    db.add(History(lecture_id=lecture.id, title=lecture.title, markdown=lecture.markdown, category=lecture.category, tags=lecture.tags, revision=lecture.revision, user_id=user.id))
+    db.add(History(lecture_id=lecture.id, title=lecture.title, author=lecture.author, sermon_date=lecture.sermon_date, markdown=lecture.markdown, category=lecture.category, tags=lecture.tags, revision=lecture.revision, user_id=user.id))
     index(db, lecture)
 
 @router.post('/render')
@@ -74,7 +79,7 @@ def listing(q: str = '', trash: bool = False, user=Depends(current_user), db=Dep
     if user.role != 'admin':
         stmt = stmt.where(Lecture.published == True)
     if q:
-        stmt = stmt.where(or_(Lecture.title.contains(q, autoescape=True), Lecture.markdown.contains(q, autoescape=True), Lecture.category.contains(q, autoescape=True)))
+        stmt = stmt.where(or_(Lecture.title.contains(q, autoescape=True), Lecture.author.contains(q, autoescape=True), Lecture.markdown.contains(q, autoescape=True), Lecture.category.contains(q, autoescape=True)))
     return [serialize(item) for item in db.scalars(stmt.order_by(Lecture.updated_at.desc()))]
 
 @router.post('/lectures')
@@ -124,7 +129,7 @@ def trash(lecture_id: int, data: Trash, user=Depends(admin), db=Depends(get_db))
 @router.get('/lectures/{lecture_id}/history')
 def histories(lecture_id: int, user=Depends(admin), db=Depends(get_db)):
     visible(db, lecture_id, user)
-    return [{'id': h.id, 'revision': h.revision, 'title': h.title, 'markdown': h.markdown, 'created_at': h.created_at} for h in db.scalars(select(History).where(History.lecture_id == lecture_id).order_by(History.revision.desc()))]
+    return [{'id': h.id, 'revision': h.revision, 'title': h.title, 'author': h.author, 'sermon_date': h.sermon_date, 'markdown': h.markdown, 'created_at': h.created_at} for h in db.scalars(select(History).where(History.lecture_id == lecture_id).order_by(History.revision.desc()))]
 
 @router.post('/lectures/{lecture_id}/history/{history_id}/restore')
 def restore_history(lecture_id: int, history_id: int, user=Depends(admin), db=Depends(get_db)):
@@ -132,7 +137,7 @@ def restore_history(lecture_id: int, history_id: int, user=Depends(admin), db=De
     previous = db.get(History, history_id)
     if item.deleted or not previous or previous.lecture_id != lecture_id:
         raise HTTPException(404, '版本不存在或讲义已删除')
-    for field in ('title', 'markdown', 'category', 'tags'):
+    for field in ('title', 'author', 'sermon_date', 'markdown', 'category', 'tags'):
         setattr(item, field, getattr(previous, field))
     item.revision += 1
     item.updated_by, item.updated_at = user.id, now()
@@ -217,7 +222,7 @@ def import_preview(file: UploadFile = File(...), user=Depends(admin)):
             raise HTTPException(422, '正文超过 200 万字符，请拆分导入')
         report = {'owner': user.id, 'markdown': markdown, 'warnings': warnings, 'filename': path.name, 'created_at': now().isoformat()}
         (pending / (preview_id + '.json')).write_text(json.dumps(report, ensure_ascii=False), encoding='utf-8')
-        return {'preview_id': preview_id, 'title': Path(file.filename).stem, 'markdown': markdown, 'warnings': warnings, **render(markdown)}
+        return {'preview_id': preview_id, 'title': Path(file.filename).stem, 'author': '', 'sermon_date': None, 'markdown': markdown, 'warnings': warnings, **render(markdown)}
     except Exception:
         path.unlink(missing_ok=True)
         raise
@@ -235,7 +240,7 @@ def confirm_import(data: Confirm, user=Depends(admin), db=Depends(get_db)):
     target = DATA_DIR / 'originals' / filename
     target.write_bytes((pending / filename).read_bytes())
     try:
-        item = Lecture(title=data.title, markdown=report['markdown'], category='', tags=[], created_by=user.id, updated_by=user.id, original_file=filename, import_report=report['warnings'], revision=1, published=False, deleted=False)
+        item = Lecture(title=data.title, author=data.author, sermon_date=data.sermon_date, markdown=report['markdown'], category='', tags=[], created_by=user.id, updated_by=user.id, original_file=filename, import_report=report['warnings'], revision=1, published=False, deleted=False)
         db.add(item)
         db.flush()
         history(db, item, user)

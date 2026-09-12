@@ -5,12 +5,12 @@ import shutil
 import tempfile
 import uuid
 import zipfile
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from sqlalchemy import DateTime, delete, select
+from sqlalchemy import Date, DateTime, delete, select
 from app.database import DATA_DIR, get_db
 from app.models import Base, Guard, User, Session, Lecture, History, Reference, Translation, Verse, now
 from app.security import admin
@@ -26,8 +26,8 @@ class Restore(BaseModel):
 def snapshot(db):
     tables = {}
     for table in TABLES:
-        tables[table.name] = [{key: value.isoformat() if isinstance(value, datetime) else value for key, value in dict(row).items()} for row in db.execute(select(table)).mappings()]
-    payload = {'format': 'scripture-library', 'version': 1, 'created_at': now().isoformat(), 'tables': tables}
+        tables[table.name] = [{key: value.isoformat() if isinstance(value, (date, datetime)) else value for key, value in dict(row).items()} for row in db.execute(select(table)).mappings()]
+    payload = {'format': 'scripture-library', 'version': 2, 'created_at': now().isoformat(), 'tables': tables}
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.writestr('database.json', json.dumps(payload, ensure_ascii=False))
@@ -51,11 +51,16 @@ def validate(data):
             if any(n != 'database.json' and not re.fullmatch(r'originals/[a-f0-9]{32}\.(docx|md)', n) for n in names):
                 raise ValueError('备份包含不安全或未知路径')
             payload = json.loads(archive.read('database.json'))
-            if payload.get('format') != 'scripture-library' or payload.get('version') != 1:
+            if payload.get('format') != 'scripture-library' or payload.get('version') not in (1, 2):
                 raise ValueError('备份版本不兼容')
             rows = payload['tables']
             if set(rows) != {t.name for t in TABLES}:
                 raise ValueError('备份表结构不完整')
+            if payload['version'] == 1:
+                for table_name in ('lectures', 'histories'):
+                    for row in rows[table_name]:
+                        row.setdefault('author', '')
+                        row.setdefault('sermon_date', None)
             for table in TABLES:
                 ids = set()
                 for row in rows[table.name]:
@@ -68,6 +73,8 @@ def validate(data):
                             raise ValueError('必填字段为空')
                         if isinstance(column.type, DateTime) and value is not None:
                             datetime.fromisoformat(value)
+                        elif isinstance(column.type, Date) and value is not None:
+                            date.fromisoformat(value)
             user_ids = {r['id'] for r in rows['users']}
             lecture_ids = {r['id'] for r in rows['lectures']}
             translation_ids = {r['id'] for r in rows['translations']}
@@ -142,6 +149,8 @@ def restore(data: Restore, user=Depends(admin), db=Depends(get_db)):
                 for column in table.columns:
                     if isinstance(column.type, DateTime) and record[column.name] is not None:
                         record[column.name] = datetime.fromisoformat(record[column.name])
+                    elif isinstance(column.type, Date) and record[column.name] is not None:
+                        record[column.name] = date.fromisoformat(record[column.name])
             if records:
                 db.execute(table.insert(), records)
         db.commit()

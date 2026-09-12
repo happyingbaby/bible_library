@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, ForeignKey, ForeignKeyConstraint, Integer, JSON, String, Text, UniqueConstraint
+from datetime import date, datetime, timezone
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, ForeignKeyConstraint, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -40,6 +40,8 @@ class Lecture(Base):
     __tablename__ = 'lectures'
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(255))
+    author: Mapped[str] = mapped_column(String(100), default='')
+    sermon_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     category: Mapped[str] = mapped_column(String(100), default='')
     tags: Mapped[list] = mapped_column(JSON, default=list)
     markdown: Mapped[str] = mapped_column(Text().with_variant(LONGTEXT(), 'mysql'))
@@ -59,6 +61,8 @@ class History(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     lecture_id: Mapped[int] = mapped_column(ForeignKey('lectures.id'))
     title: Mapped[str] = mapped_column(String(255))
+    author: Mapped[str] = mapped_column(String(100), default='')
+    sermon_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     markdown: Mapped[str] = mapped_column(Text().with_variant(LONGTEXT(), 'mysql'))
     category: Mapped[str] = mapped_column(String(100))
     tags: Mapped[list] = mapped_column(JSON)

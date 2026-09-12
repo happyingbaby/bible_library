@@ -77,6 +77,9 @@ def test_upgrade_existing_0001_preserves_verses(tmp_path):
         element.parent.foreign_keys.discard(element)
     old.create_all(engine)
     with engine.begin() as conn:
+        for table_name in ('lectures', 'histories'):
+            conn.execute(sa.text(f'ALTER TABLE {table_name} DROP COLUMN author'))
+            conn.execute(sa.text(f'ALTER TABLE {table_name} DROP COLUMN sermon_date'))
         conn.execute(old.tables['translations'].insert(), dict(id=1, code='old', name='原译本', language='zh', source='', revision=7))
         conn.execute(verses.insert(), dict(id=1, translation_id=1, book='Gen', chapter=1, verse=1, text='已有正文😀'))
         config = Config()
@@ -88,6 +91,8 @@ def test_upgrade_existing_0001_preserves_verses(tmp_path):
         assert conn.execute(sa.text('SELECT revision FROM translations')).scalar() == 7
         assert conn.execute(sa.text('SELECT count(*) FROM bible_chapters')).scalar() == 1189
         assert any(f['name']=='fk_verses_chapter' for f in sa.inspect(conn).get_foreign_keys('verses'))
+        assert {'author', 'sermon_date'} <= {c['name'] for c in sa.inspect(conn).get_columns('lectures')}
+        assert {'author', 'sermon_date'} <= {c['name'] for c in sa.inspect(conn).get_columns('histories')}
     engine.dispose()
 
 
