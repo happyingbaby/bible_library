@@ -7,5 +7,5 @@ export default defineConfig({
   base: './',
   root: fileURLToPath(new URL('.', import.meta.url)),
   build: {outDir: 'dist', emptyOutDir: true},
-  server: {host: '127.0.0.1', port: 5173, strictPort: true},
+  server: {host: '127.0.0.1', port: 5174, strictPort: true},
 });

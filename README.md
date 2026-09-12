@@ -59,6 +59,8 @@ package.json            # 统一命令、JS 依赖与桌面打包配置
 
 `npm run dev:frontend` 单独启动前端开发服务器；`npm run dev` 联合启动前端和 Electron 管理的后端。隔离界面验证时，在两个终端分别执行 `uv run --project backend --locked python backend/scripts/preview_backend.py` 和 `VITE_APP_KEY=bible-local-preview-key npm run dev:frontend`，并先确认未继承正式 `DATABASE_URL`。
 
+浏览器使用 `npm run web` → `http://127.0.0.1:5173/`；桌面开发使用 `npm run dev` → Electron 窗口（Vite 内部地址为 `http://127.0.0.1:5174/`）。两种模式可同时运行，共用正式资料库。浏览器不要直接打开桌面 Vite 地址；隔离前端预览也使用 5174，需与桌面开发交替运行。
+
 ## 安装和开发
 
 首版安装包为当前机器架构 **Intel x64**，尚未 Apple Developer 签名或公证。Apple Silicon 需要在目标架构环境另行构建并验证，不将当前产物称为通用安装包。
@@ -145,7 +147,7 @@ npm run build
 
 网页版使用 `~/Library/Application Support/圣经讲义/library/` 的现有数据库配置和原件，与桌面版共用正式账户和资料。`DATABASE_URL`、`BIBLE_DATA_DIR` 可覆盖默认配置，启动前请核实。启动后端会执行已有 Alembic 迁移。远程 MySQL 需要网络连接。
 
-网页版仅监听 `127.0.0.1`，不是可供其他电脑访问的服务器部署。启动器生成临时应用密钥，账户和权限校验仍由后端执行。网页与 API 同源，下载使用浏览器保存流程。`npm run web` 与开发预览默认共用 5173 端口，请先关闭开发预览。
+网页版仅监听 `127.0.0.1`，不是可供其他电脑访问的服务器部署。启动器生成临时应用密钥，账户和权限校验仍由后端执行。网页与 API 同源，下载使用浏览器保存流程。`npm run web` 使用 5173，桌面开发及隔离前端预览使用 5174。网页版可与桌面开发同时运行。
 
 ## 首版边界
 

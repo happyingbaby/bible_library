@@ -42,19 +42,22 @@ npm run dev
 
 - `npm run dev` 启动 Vite，再启动 Electron；Electron 负责启动 Python 服务。
 - 不额外启动同一份正式后端；`npm run desktop` 本身不会启动 Vite。
-- 本机网页版使用 `npm run web` 构建并启动，访问 `http://127.0.0.1:5173`；入口为 `scripts/web.cjs`，与桌面版共用正式资料目录及数据库配置。启动前先关闭占用 5173 的开发预览。
+- 本机网页版使用 `npm run web` 构建并启动，访问 `http://127.0.0.1:5173`；入口为 `scripts/web.cjs`，与桌面版共用正式资料目录及数据库配置。网页版固定使用 5173，桌面开发及隔离前端预览使用 5174，可同时运行。
 - 网页启动器生成随机应用密钥，代理同源 `/api`，保留后端认证并拒绝不匹配的 Host/Origin；仅供本机访问，不是服务器部署。`npm run test:web` 验证网关访问校验。
-- Vite 使用 `127.0.0.1:5173`；桌面后端采用随机本机端口。
+- Vite 使用 `127.0.0.1:5174`；桌面后端采用随机本机端口。
 - 开发版与安装版默认共用正式资料目录；不要用 `npm run dev` 执行破坏性数据试验。
 - 打开 `release/mac/圣经讲义.app` 运行安装版；MySQL 是独立服务，不随应用安装。
 
 ```bash
 npm run test:backend
+npm run test:dev
+npm run test:web
 npm run build
 npm run package:mac
 ```
 
 - `test:backend` 通过 `uv run --project backend --locked` 执行 pytest，使用临时 SQLite 数据库；导入路径由 `backend/pyproject.toml` 配置。
+- `test:dev` 验证桌面 Vite 与网页网关共存、端口冲突时不启动 Electron、Electron 启动失败时释放端口。
 - `build` 先执行 TypeScript 检查，再生成 `frontend/dist/`。
 - `package:mac` 重新构建前端、用 PyInstaller 打包后端，再用 electron-builder 生成 `.app`。
 - 打包包含 Python 服务、Pandoc、数据库驱动及 Alembic 迁移；不能遗漏这些运行资源。

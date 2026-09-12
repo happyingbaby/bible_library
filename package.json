@@ -18,7 +18,8 @@
     "predev": "npm run sync:backend",
     "predesktop": "npm run sync:backend",
     "preweb": "npm run sync:backend",
-    "package:backend": "uv run --project backend --locked --group build python backend/scripts/package_backend.py"
+    "package:backend": "uv run --project backend --locked --group build python backend/scripts/package_backend.py",
+    "test:dev": "node --test scripts/dev.test.cjs"
   },
   "dependencies": {
     "react": "^19.0.0",
