@@ -1,0 +1,19 @@
+{
+  "books": 66,
+  "chapters": 1158,
+  "inserted": 30520,
+  "updated": 0,
+  "skipped": 1,
+  "skipped_cat": 0,
+  "no_english": 2,
+  "bad_ref": 0,
+  "warnings": [
+    "1Chr:no_english:代上21:31",
+    "fetch_failed Eccl https://prayers.github.io/learning/bible/%E4%BC%A0%E9%81%93%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+    "fetch_failed Joel https://prayers.github.io/learning/bible/%E7%BA%A6%E7%8F%A5%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+    "fetch_failed Amos https://prayers.github.io/learning/bible/%E9%98%BF%E6%91%A9%E5%8F%B8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+    "fetch_failed 1Tim https://prayers.github.io/learning/bible/%E6%8F%90%E6%91%A9%E5%A4%AA%E5%89%8D%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+    "fetch_failed Phlm https://prayers.github.io/learning/bible/%E8%85%93%E5%88%A9%E9%97%A8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+    "3John:no_english:约三1:15"
+  ]
+}

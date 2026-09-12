@@ -1,0 +1,14 @@
+{
+  "books": 66,
+  "chapters": 30,
+  "inserted": 554,
+  "updated": 0,
+  "skipped": 0,
+  "skipped_cat": 0,
+  "no_english": 2,
+  "bad_ref": 0,
+  "warnings": [
+    "1Chr:no_english:代上21:31",
+    "3John:no_english:约三1:15"
+  ]
+}

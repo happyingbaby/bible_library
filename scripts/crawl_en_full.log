@@ -1,0 +1,72 @@
+  fetch_failed Eccl https://prayers.github.io/learning/bible/%E4%BC%A0%E9%81%93%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>
+  fetch_failed Joel https://prayers.github.io/learning/bible/%E7%BA%A6%E7%8F%A5%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>
+  fetch_failed Amos https://prayers.github.io/learning/bible/%E9%98%BF%E6%91%A9%E5%8F%B8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>
+  fetch_failed 1Tim https://prayers.github.io/learning/bible/%E6%8F%90%E6%91%A9%E5%A4%AA%E5%89%8D%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>
+  fetch_failed Phlm https://prayers.github.io/learning/bible/%E8%85%93%E5%88%A9%E9%97%A8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>
+解析目录页: https://prayers.github.io/learning/bible/bible_content.html
+  目录解析到 66 卷
+  [ 1] Gen 创世记: 50 章, 新增 1532 / 更新 0 / 跳过 1
+  [ 2] Exod 出埃及记: 40 章, 新增 2745 / 更新 0 / 跳过 1
+  [ 3] Lev 利未记: 27 章, 新增 3604 / 更新 0 / 跳过 1
+  [ 4] Num 民数记: 36 章, 新增 4892 / 更新 0 / 跳过 1
+  [ 5] Deut 申命记: 34 章, 新增 5851 / 更新 0 / 跳过 1
+  [ 6] Josh 约书亚记: 24 章, 新增 6509 / 更新 0 / 跳过 1
+  [ 7] Judg 士师记: 21 章, 新增 7127 / 更新 0 / 跳过 1
+  [ 8] Ruth 路得记: 4 章, 新增 7212 / 更新 0 / 跳过 1
+  [ 9] 1Sam 撒母耳记上: 31 章, 新增 8022 / 更新 0 / 跳过 1
+  [10] 2Sam 撒母耳记下: 24 章, 新增 8717 / 更新 0 / 跳过 1
+  [11] 1Kgs 列王纪上: 22 章, 新增 9533 / 更新 0 / 跳过 1
+  [12] 2Kgs 列王纪下: 25 章, 新增 10252 / 更新 0 / 跳过 1
+  [13] 1Chr 历代志上: 29 章, 新增 11193 / 更新 0 / 跳过 1
+  [14] 2Chr 历代志下: 36 章, 新增 12015 / 更新 0 / 跳过 1
+  [15] Ezra 以斯拉记: 10 章, 新增 12295 / 更新 0 / 跳过 1
+  [16] Neh 尼希米记: 13 章, 新增 12701 / 更新 0 / 跳过 1
+  [17] Esth 以斯帖记: 10 章, 新增 12868 / 更新 0 / 跳过 1
+  [18] Job 约伯记: 42 章, 新增 13938 / 更新 0 / 跳过 1
+  [19] Ps 诗篇: 150 章, 新增 16399 / 更新 0 / 跳过 1
+  [20] Prov 箴言: 31 章, 新增 17314 / 更新 0 / 跳过 1
+  [22] Song 雅歌: 8 章, 新增 17431 / 更新 0 / 跳过 1
+  [23] Isa 以赛亚书: 66 章, 新增 18723 / 更新 0 / 跳过 1
+  [24] Jer 耶利米书: 52 章, 新增 20087 / 更新 0 / 跳过 1
+  [25] Lam 耶利米哀歌: 5 章, 新增 20241 / 更新 0 / 跳过 1
+  [26] Ezek 以西结书: 48 章, 新增 21514 / 更新 0 / 跳过 1
+  [27] Dan 但以理书: 12 章, 新增 21871 / 更新 0 / 跳过 1
+  [28] Hos 何西阿书: 14 章, 新增 22068 / 更新 0 / 跳过 1
+  [31] Obad 俄巴底亚书: 1 章, 新增 22089 / 更新 0 / 跳过 1
+  [32] Jonah 约拿书: 4 章, 新增 22137 / 更新 0 / 跳过 1
+  [33] Mic 弥迦书: 7 章, 新增 22242 / 更新 0 / 跳过 1
+  [34] Nah 那鸿书: 3 章, 新增 22289 / 更新 0 / 跳过 1
+  [35] Hab 哈巴谷书: 3 章, 新增 22345 / 更新 0 / 跳过 1
+  [36] Zeph 西番雅书: 3 章, 新增 22398 / 更新 0 / 跳过 1
+  [37] Hag 哈该书: 2 章, 新增 22436 / 更新 0 / 跳过 1
+  [38] Zech 撒迦利亚书: 14 章, 新增 22647 / 更新 0 / 跳过 1
+  [39] Mal 玛拉基书: 4 章, 新增 22702 / 更新 0 / 跳过 1
+  [40] Matt 马太福音: 28 章, 新增 23773 / 更新 0 / 跳过 1
+  [41] Mark 马可福音: 16 章, 新增 24451 / 更新 0 / 跳过 1
+  [42] Luke 路加福音: 24 章, 新增 25602 / 更新 0 / 跳过 1
+  [43] John 约翰福音: 21 章, 新增 26480 / 更新 0 / 跳过 1
+  [44] Acts 使徒行传: 28 章, 新增 27487 / 更新 0 / 跳过 1
+  [45] Rom 罗马书: 16 章, 新增 27920 / 更新 0 / 跳过 1
+  [46] 1Cor 哥林多前书: 16 章, 新增 28357 / 更新 0 / 跳过 1
+  [47] 2Cor 哥林多后书: 13 章, 新增 28614 / 更新 0 / 跳过 1
+  [48] Gal 加拉太书: 6 章, 新增 28763 / 更新 0 / 跳过 1
+  [49] Eph 以弗所书: 6 章, 新增 28918 / 更新 0 / 跳过 1
+  [50] Phil 腓立比书: 4 章, 新增 29022 / 更新 0 / 跳过 1
+  [51] Col 歌罗西书: 4 章, 新增 29117 / 更新 0 / 跳过 1
+  [52] 1Thess 帖撒罗尼迦前书: 5 章, 新增 29206 / 更新 0 / 跳过 1
+  [53] 2Thess 帖撒罗尼迦后书: 3 章, 新增 29253 / 更新 0 / 跳过 1
+  [55] 2Tim 提摩太后书: 4 章, 新增 29336 / 更新 0 / 跳过 1
+  [56] Titus 提多书: 3 章, 新增 29382 / 更新 0 / 跳过 1
+  [58] Heb 希伯来书: 13 章, 新增 29685 / 更新 0 / 跳过 1
+  [59] Jas 雅各书: 5 章, 新增 29793 / 更新 0 / 跳过 1
+  [60] 1Pet 彼得前书: 5 章, 新增 29898 / 更新 0 / 跳过 1
+  [61] 2Pet 彼得后书: 3 章, 新增 29959 / 更新 0 / 跳过 1
+  [62] 1John 约翰一书: 5 章, 新增 30064 / 更新 0 / 跳过 1
+  [63] 2John 约翰二书: 1 章, 新增 30077 / 更新 0 / 跳过 1
+  [64] 3John 约翰三书: 1 章, 新增 30091 / 更新 0 / 跳过 1
+  [65] Jude 犹大书: 1 章, 新增 30116 / 更新 0 / 跳过 1
+  [66] Rev 启示录: 22 章, 新增 30520 / 更新 0 / 跳过 1
+
+=== 总计 ===
+{"books": 66, "chapters": 1158, "inserted": 30520, "updated": 0, "skipped": 1, "skipped_cat": 0, "no_english": 2, "bad_ref": 0, "warnings": ["1Chr:no_english:代上21:31", "fetch_failed Eccl https://prayers.github.io/learning/bible/%E4%BC%A0%E9%81%93%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>", "fetch_failed Joel https://prayers.github.io/learning/bible/%E7%BA%A6%E7%8F%A5%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>", "fetch_failed Amos https://prayers.github.io/learning/bible/%E9%98%BF%E6%91%A9%E5%8F%B8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>", "fetch_failed 1Tim https://prayers.github.io/learning/bible/%E6%8F%90%E6%91%A9%E5%A4%AA%E5%89%8D%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>", "fetch_failed Phlm https://prayers.github.io/learning/bible/%E8%85%93%E5%88%A9%E9%97%A8%E4%B9%A6.html: <urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>", "3John:no_english:约三1:15"]}
+报告已写出: crawl_en_report.json
