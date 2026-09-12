@@ -15,8 +15,9 @@
 .choice-options [role=option].active{background:#edf2e7}
 .choice-options [aria-selected=true]{color:var(--green);font-weight:600}
 .chapter-navigation{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:22px}
-.chapter-navigation strong{white-space:nowrap;font-size:13px}
+.chapter-navigation>.choice{width:130px;flex-shrink:1}
+.chapter-navigation>button{white-space:nowrap;flex-shrink:0}
+.fixed-verse-number{padding:10px 11px;background:#edf1e7;border-radius:6px;color:#58674f}
 .bible-verses article{grid-template-columns:25px minmax(0,1fr) 86px}
 .bible-verses article>div{flex-direction:row;justify-content:flex-end;gap:5px}
-.bible-verses article.multiline>div{flex-direction:column;align-items:flex-end}
 .bible-verses article>div button{white-space:nowrap}
