@@ -20,7 +20,7 @@ async def lifespan(app):
     yield
 
 app = FastAPI(title='圣经讲义管理平台', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173', 'null'], allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], allow_headers=['Authorization', 'Content-Type', 'X-App-Key'])
+app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'null'], allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], allow_headers=['Authorization', 'Content-Type', 'X-App-Key'])
 
 @app.middleware('http')
 async def local_client(request: Request, call_next):
