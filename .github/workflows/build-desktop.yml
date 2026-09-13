@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  UV_DEFAULT_INDEX: https://pypi.org/simple
+
 jobs:
   mac-native:
     strategy:
@@ -81,6 +84,7 @@ jobs:
 
   windows:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x64
@@ -93,7 +97,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          architecture: ${{ matrix.python-arch }}
+          architecture: x64
           cache: npm
       - uses: actions/setup-python@v5
         with:
@@ -113,6 +117,8 @@ jobs:
             uv sync --project backend --locked --group build --python "$env:pythonLocation\python.exe"
           }
       - run: npm run package:win -- --${{ matrix.arch }}
+        env:
+          BIBLE_BUILD_ARCH: ${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: windows-${{ matrix.arch }}
