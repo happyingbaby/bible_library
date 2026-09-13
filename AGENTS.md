@@ -3,7 +3,7 @@
 ## 1. 项目目标与适用范围
 
 - 本文件适用于当前项目根目录及其子目录，记录已确认的长期设计和开发约束。
-- 项目是跨平台桌面讲义资料库，当前应用版本为 `0.1.0`；已完成首版功能和 Intel Mac 本机构建，并配置 macOS 通用版及 Windows x64/32 位 CI 构建。
+- 项目是跨平台桌面讲义资料库，当前应用版本为 `0.1.0`；已完成首版功能和 Intel Mac 本机构建，并配置 macOS 独立 arm64／x64 版及 Windows x64/32 位 CI 构建。
 - 核心流程：管理员添加用户 → Word 转 Markdown → 整理与编辑 → 发布 → 用户阅读 → 点击引用查看中英文经文。
 - 管理员维护同一个资料库，阅读用户查看全部已发布讲义；不做逐用户、逐讲义授权。
 - 已实现用户管理、导入预览、Markdown 编辑、历史恢复、发布、回收站、经文对照及完整备份恢复。
@@ -64,7 +64,7 @@ npm run package:win
 - `package:mac` 和 `package:win` 重新构建前端、用 PyInstaller 打包后端，再由 electron-builder 生成当前系统及架构的安装包。
 - 打包包含 Python 服务、Pandoc、数据库驱动及 Alembic 迁移；不能遗漏这些运行资源。
 - 当前已验证产物为 Intel x64，未做 Apple Developer 签名或公证；不得标称通用架构安装包。
-- `.github/workflows/build-desktop.yml` 在原生 Intel Mac、Apple Silicon Mac 和 Windows x64/x86 runner 构建，并合并 macOS 通用应用；工作流成功运行前不得把 CI 产物写成已验证。
+- `.github/workflows/build-desktop.yml` 在原生 Intel Mac、Apple Silicon Mac 和 Windows x64/x86 runner 构建，分别生成 Apple Silicon arm64 与 Intel x64 DMG，不再合并通用版；工作流成功运行前不得把 CI 产物写成已验证。
 - Windows 32 位使用内置 DOCX 兼容转换器，保留常见标题、段落、粗体、斜体和列表；复杂表格、图片及修订必须提示人工核对。
 
 隔离的浏览器界面验证分别在两个终端启动：
@@ -196,7 +196,7 @@ VITE_APP_KEY=bible-local-preview-key npm run dev:frontend
 
 ## 8. 已知限制与接手易错点
 
-- `Connection.host` 的表单接口当前只允许回环地址；配置文件启动路径可读取远程地址，两条路径尚未统一。
+- 连接表单已允许 IP／主机名；默认线上地址 `39.102.143.118:3306`，数据库及用户名 `bible_library`。打包密码从忽略提交的 `.local/database-defaults.json` 或 `BIBLE_DB_PASSWORD` 注入，禁止写入 Git。已有 `database.json` 优先于安装包默认连接。
 - 前端连接默认值及部分“本机／离线”文案仍沿用旧部署方式；远程配置界面的完整适配：[待补充]。
 - 用户已反馈远程连接恢复；远程认证、迁移和桌面端到端复验结果：[待补充]，不能沿用本机测试结论。
 - 开发版和安装版会共用账户与资料，启动前必须核实目标配置及 `DATABASE_URL`。

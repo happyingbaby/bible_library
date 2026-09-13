@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 from app import database
@@ -40,7 +40,7 @@ async def database_error(request, exc):
 def status():
     with database.LOCK:
         if database.factory is None:
-            return {'connected': False, 'initialized': False, 'error': database.connection_error}
+            return {'connected': False, 'initialized': False, 'error': database.connection_error, 'connection': database.connection_defaults()}
         try:
             with database.factory() as db:
                 initialized = db.scalar(select(User.id).limit(1)) is not None
@@ -49,7 +49,21 @@ def status():
             return {'connected': False, 'initialized': False, 'error': 'MySQL 连接已中断，请检查服务或重新配置连接。'}
 
 class Connection(BaseModel):
-    host: str = Field(default='127.0.0.1', pattern=r'^(127\.0\.0\.1|localhost|::1)$')
+    host: str = Field(default=database.DEFAULT_CONNECTION['host'], min_length=1, max_length=253)
+
+    @field_validator('host')
+    @classmethod
+    def valid_host(cls, value):
+        import ipaddress
+        import re
+        value = value.strip()
+        try:
+            ipaddress.ip_address(value)
+            return value
+        except ValueError:
+            if not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?', value) or any(not label or len(label)>63 or label.startswith('-') or label.endswith('-') for label in value.split('.')):
+                raise ValueError('请输入有效的 IP 地址或主机名，不要包含协议、端口或路径')
+            return value
     port: int = Field(default=3306, ge=1, le=65535)
     username: str = Field(min_length=1, max_length=100)
     password: str = Field(max_length=200)
@@ -69,8 +83,8 @@ def configure(data: Connection, authorization: str = Header(default='')):
                 pass  # A broken connection must remain recoverable from the local shell.
         try:
             database.connect(database.mysql_url(data.model_dump()))
-        except Exception:
-            raise HTTPException(400, '连接或初始化失败。请确认 MySQL 已启动、数据库已创建，且账户拥有该数据库的建表与读写权限。')
+        except Exception as exc:
+            raise HTTPException(400, database.connection_message(exc))
         path = database.DATA_DIR / 'database.json'
         temporary = path.with_suffix('.tmp')
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)

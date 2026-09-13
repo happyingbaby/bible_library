@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   mac-native:
+    env:
+      BIBLE_DB_PASSWORD: ${{ secrets.BIBLE_DB_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
@@ -37,52 +39,24 @@ jobs:
       - name: Verify native architecture
         run: test "$(uname -m)" = "${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
       - run: uv sync --project backend --locked --group build --python "$pythonLocation/bin/python"
-      - run: npm run package:mac:dir -- --${{ matrix.arch }} --config.directories.output=release/mac-${{ matrix.arch }}
-      - name: Preserve app permissions and symlinks
+      - run: npm run package:mac:native -- --${{ matrix.arch }} --config.directories.output=release/mac-${{ matrix.arch }}
+      - name: Verify app and backend architecture
+        shell: bash
         run: |
           APP_PATH=$(find release/mac-${{ matrix.arch }} -maxdepth 2 -name '圣经讲义.app' -type d -print -quit)
           test -n "$APP_PATH"
-          tar -C "$(dirname "$APP_PATH")" -czf release/mac-${{ matrix.arch }}.tgz '圣经讲义.app'
+          EXPECTED="${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
+          test "$(lipo -archs "$APP_PATH/Contents/MacOS/圣经讲义")" = "$EXPECTED"
+          test "$(lipo -archs "$APP_PATH/Contents/Resources/backend/bible-backend")" = "$EXPECTED"
       - uses: actions/upload-artifact@v4
         with:
-          name: mac-${{ matrix.arch }}
-          path: release/mac-${{ matrix.arch }}.tgz
-          if-no-files-found: error
-
-  mac-universal:
-    needs: mac-native
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: mac-*
-          path: inputs
-      - name: Merge Intel and Apple Silicon applications
-        run: |
-          mkdir -p inputs/x64 inputs/arm64 release/universal
-          tar -xzf inputs/mac-x64/mac-x64.tgz -C inputs/x64
-          tar -xzf inputs/mac-arm64/mac-arm64.tgz -C inputs/arm64
-          node scripts/make-universal-mac.cjs inputs/x64/'圣经讲义.app' inputs/arm64/'圣经讲义.app' release/universal/'圣经讲义.app'
-          codesign --force --deep --sign - release/universal/'圣经讲义.app'
-          VERSION=$(node -p "require('./package.json').version")
-          hdiutil create -volname '圣经讲义' -srcfolder release/universal/'圣经讲义.app' -ov -format UDZO "release/圣经讲义-${VERSION}-mac-universal.dmg"
-          lipo -archs release/universal/'圣经讲义.app'/Contents/MacOS/'圣经讲义'
-          test "$(lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend-x64/bible-backend)" = "x86_64"
-          test "$(lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend-arm64/bible-backend)" = "arm64"
-          codesign --verify --deep --strict release/universal/'圣经讲义.app'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mac-universal
-          path: release/*-mac-universal.dmg
+          name: mac-${{ matrix.arch == 'arm64' && 'Apple-Silicon' || 'Intel' }}
+          path: release/mac-${{ matrix.arch }}/*-mac-${{ matrix.arch }}.dmg
           if-no-files-found: error
 
   windows:
+    env:
+      BIBLE_DB_PASSWORD: ${{ secrets.BIBLE_DB_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:

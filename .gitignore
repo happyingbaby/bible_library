@@ -11,3 +11,6 @@ __pycache__/
 .env
 .data/
 .DS_Store
+
+# Local-only package database credentials
+.local/

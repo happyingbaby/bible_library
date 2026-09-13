@@ -12,7 +12,7 @@
     "build": "tsc --noEmit -p frontend/tsconfig.json && vite build --config frontend/vite.config.ts",
     "desktop": "electron .",
     "package:mac": "npm run package:mac:native",
-    "package:mac:native": "npm run build && npm run package:backend && electron-builder --mac dmg zip --publish never --config.electronDist=node_modules/electron/dist",
+    "package:mac:native": "npm run build && npm run package:backend && electron-builder --mac dmg --publish never --config.electronDist=node_modules/electron/dist",
     "package:mac:dir": "npm run build && npm run package:backend && electron-builder --mac dir --publish never --config.electronDist=node_modules/electron/dist",
     "package:win": "npm run build && npm run package:backend && electron-builder --win nsis --publish never",
     "test:backend": "uv run --project backend --locked python -m pytest backend/tests -q",

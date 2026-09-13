@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+import sys
 from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
@@ -13,6 +14,7 @@ LOCK = threading.Lock()
 engine = None
 factory = None
 connection_error = None
+DEFAULT_CONNECTION = {'host':'39.102.143.118', 'port':3306, 'database':'bible_library', 'username':'bible_library'}
 
 
 def connect(url):
@@ -40,6 +42,33 @@ def mysql_url(config):
     return URL.create('mysql+pymysql', username=config['username'], password=config['password'], host=config.get('host', '127.0.0.1'), port=int(config.get('port', 3306)), database=config['database'], query={'charset': 'utf8mb4'})
 
 
+def connection_defaults():
+    """Only non-secret fields are exposed to the connection form."""
+    config = dict(DEFAULT_CONNECTION)
+    path = DATA_DIR / 'database.json'
+    if path.is_file():
+        try:
+            saved = json.loads(path.read_text())
+            config.update({key:saved[key] for key in config if key in saved})
+        except (ValueError, OSError, TypeError):
+            pass
+    return config
+
+
+def connection_message(exc):
+    original = getattr(exc, 'orig', exc)
+    code = original.args[0] if original.args else None
+    if code == 1045:
+        return '数据库认证失败，请检查数据库用户名、密码及服务器账户的来源主机授权。'
+    if code in (2003, 2005, 2006, 2013):
+        return '无法连接数据库服务器，请检查网络、服务器地址、端口及防火墙放行规则。'
+    if code == 1049:
+        return '目标数据库不存在，请核对数据库名称。'
+    if code in (1044, 1142, 1143):
+        return '数据库账户权限不足，需要目标数据库的读写和结构迁移权限。'
+    return '数据库连接或结构升级失败，请核对连接配置及数据库迁移兼容性。'
+
+
 def initialize():
     global connection_error
     try:
@@ -47,8 +76,14 @@ def initialize():
             connect(os.environ['DATABASE_URL'])
         elif (DATA_DIR / 'database.json').exists():
             connect(mysql_url(json.loads((DATA_DIR / 'database.json').read_text())))
-    except Exception:
-        connection_error = '无法连接数据库，请检查 MySQL 服务、数据库名称和连接账户。'
+        elif os.environ.get('BIBLE_DB_PASSWORD'):
+            connect(mysql_url({**DEFAULT_CONNECTION, 'password':os.environ['BIBLE_DB_PASSWORD']}))
+        elif getattr(sys, 'frozen', False) and (Path(sys._MEIPASS) / 'database-defaults.json').is_file():
+            connect(mysql_url(json.loads((Path(sys._MEIPASS) / 'database-defaults.json').read_text())))
+        else:
+            connection_error = '已预设线上资料库地址，请输入数据库密码完成首次连接；无需在此电脑安装 MySQL。'
+    except Exception as exc:
+        connection_error = connection_message(exc)
 
 
 def get_db():

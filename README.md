@@ -63,7 +63,7 @@ package.json            # 统一命令、JS 依赖与桌面打包配置
 
 ## 安装和开发
 
-桌面端构建目标为 macOS 通用版（Intel x64 + Apple Silicon arm64）和 Windows x64/32 位版。安装包尚未 Apple Developer 或 Microsoft 代码签名；首次运行时系统可能显示安全确认。
+桌面端构建目标为 macOS 两个独立版本（Intel x64、Apple Silicon arm64）和 Windows x64/32 位版。安装包尚未 Apple Developer 或 Microsoft 代码签名；首次运行时系统可能显示安全确认。
 
 开发需要 Node.js（建议 22.12+）、uv、Python 3.14+ 和 MySQL（本机验证版本为 8.4）。当前机器使用 Node 20.20.2、Python 3.14.6 完成构建；electron-builder 的间接依赖会对 Node 20 给出引擎版本提示。
 
@@ -101,7 +101,8 @@ npm run package:win
 
 `package:mac` 和 `package:win` 构建当前操作系统与 CPU 架构的原生安装包。完整的四架构产物由 GitHub Actions 的 `Build desktop clients` 工作流生成：
 
-- `圣经讲义-0.1.0-mac-universal.dmg`：同一个应用兼容 Intel 与 Apple Silicon。
+- `圣经讲义-0.1.0-mac-arm64.dmg`：M 系列芯片（含 M5）。
+- `圣经讲义-0.1.0-mac-x64.dmg`：Intel 芯片。
 - `圣经讲义-0.1.0-windows-x64-setup.exe`：Windows 64 位安装程序。
 - `圣经讲义-0.1.0-windows-ia32-setup.exe`：Windows 32 位安装程序，也可运行在 64 位 Windows。
 
@@ -167,3 +168,17 @@ npm run build
 ## 经文目录与爬虫开发
 
 经文管理页面支持两约、书卷、章节浏览和逐节维护。字段解释、关联约束及采集程序写入示例见 [圣经数据结构与爬虫接口](docs/圣经数据结构与爬虫接口.md)。本次新增迁移为 `0002`，独立采集器用法见上述文档第 11 节；管理页不提供 JSON 导入入口，既有后端导入接口保留兼容。
+
+
+## 安装包默认线上连接
+
+新安装包预设 `39.102.143.118:3306`，数据库与用户名均为 `bible_library`，无需在客户端电脑安装 MySQL。
+
+1. 本机构建读取 `.local/database-defaults.json`（不提交 Git，权限 0600）；也可通过 `BIBLE_DB_PASSWORD` 环境变量提供打包密码。
+2. GitHub Actions 需要仓库 Actions Secret `BIBLE_DB_PASSWORD`。缺少密码时构建会明确失败，避免生成不能自动连接的包。
+3. 在原生 Apple Silicon 和 Intel runner 分别生成 `mac-arm64.dmg` 与 `mac-x64.dmg`；应用与 Python 后端必须架构一致，CI 会核验。
+4. 连接优先级：运行时 `DATABASE_URL` → 已有 `database.json` → 运行时 `BIBLE_DB_PASSWORD` 配合默认线上参数 → 安装包预设配置。已有本机配置不会被新包覆盖；旧配置仍指向本机时，在连接页面更新为线上地址。
+
+默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。开发／网页版没有本机连接配置且未设置环境变量时，仍提示输入数据库密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
+
+本次修改验证了代码构建和隔离测试；两个新 DMG 尚需运行 CI 构建，未在 M5 实机验收。
