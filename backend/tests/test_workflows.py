@@ -115,7 +115,7 @@ def test_six_reference_forms(raw,end):
     result = render(raw)
     assert len(result['references']) == 1
     ref = result['references'][0]
-    assert (ref['book'],ref['chapter'],ref['start'],ref['end'],ref['status']) == ('Gen',1,1,end,'valid')
+    assert (ref['book'],ref['book_name'],ref['chapter'],ref['start'],ref['end'],ref['status']) == ('Gen','创世记',1,1,end,'valid')
 
 
 def test_reference_exclusions_and_invalid():

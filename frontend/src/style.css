@@ -22,6 +22,8 @@
 .bible-verses article>div{flex-direction:row;justify-content:flex-end;gap:5px}
 .bible-verses article>div button{white-space:nowrap}
 .editor-metadata .row+.row{margin-top:12px}
+.scripture-chapter{padding:17px 0 14px;margin:0;border-top:1px solid #e0e4d6;color:#405647;font-family:"Songti SC","STSong",serif;font-size:17px}
+.scripture-chapter span{margin-left:8px;font-size:13px;font-weight:400;color:#7e8d7d}
 .import-progress{text-align:center;padding:8px 4px 12px}
 .import-progress-icon{width:58px;height:58px;margin:0 auto 17px;border-radius:15px;display:grid;place-items:center;background:#edf3e9;color:var(--green)}
 .import-progress-name{font-weight:600;margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

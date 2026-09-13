@@ -94,7 +94,7 @@ def parse_reference(raw):
     if not book:
         return {**result, 'message': '无法识别书卷名称'}
     chapter, start, end = int(chapter), int(start), int(end or start)
-    result.update(book=book, chapter=chapter, start=start, end=end, part=part or '')
+    result.update(book=book, book_name=BOOKS[book]['name'], chapter=chapter, start=start, end=end, part=part or '')
     if not (1 <= chapter <= BOOKS[book]['chapters'] and 1 <= start <= end <= 176):
         return {**result, 'message': '章节或经节范围错误'}
     return {**result, 'status': 'valid', 'message': ''}
