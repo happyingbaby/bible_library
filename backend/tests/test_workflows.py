@@ -128,6 +128,24 @@ def test_first_john_financial_numeral_alias(raw):
     )
 
 
+@pytest.mark.parametrize(
+    ('raw', 'book', 'book_name'),
+    [
+        ('【约贰1:1-2】', '2John', '约翰二书'),
+        ('【約貳1:1-2】', '2John', '约翰二书'),
+        ('【约叁1:1-2】', '3John', '约翰三书'),
+        ('【約參1:1-2】', '3John', '约翰三书'),
+    ],
+)
+def test_second_and_third_john_financial_numeral_aliases(raw, book, book_name):
+    result = render(raw)
+    assert len(result['references']) == 1
+    ref = result['references'][0]
+    assert (ref['book'], ref['book_name'], ref['chapter'], ref['start'], ref['end'], ref['status']) == (
+        book, book_name, 1, 1, 2, 'valid'
+    )
+
+
 def test_reference_exclusions_and_invalid():
     result = render('`【创1:1】` [【创1:2】](https://example.com)\n\n```\n【创1:3】\n```\n\n【创1:5-1】【未知1:1】【创51:1】【创1:1】【创1:1】\n\n<script>alert(1)</script>')
     assert len(result['references']) == 5
