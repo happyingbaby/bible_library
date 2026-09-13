@@ -3,7 +3,7 @@
 ## 1. 项目目标与适用范围
 
 - 本文件适用于当前项目根目录及其子目录，记录已确认的长期设计和开发约束。
-- 项目是 macOS 桌面讲义资料库，当前应用版本为 `0.1.0`，已完成首版功能和 Intel Mac 打包。
+- 项目是跨平台桌面讲义资料库，当前应用版本为 `0.1.0`；已完成首版功能和 Intel Mac 本机构建，并配置 macOS 通用版及 Windows x64/32 位 CI 构建。
 - 核心流程：管理员添加用户 → Word 转 Markdown → 整理与编辑 → 发布 → 用户阅读 → 点击引用查看中英文经文。
 - 管理员维护同一个资料库，阅读用户查看全部已发布讲义；不做逐用户、逐讲义授权。
 - 已实现用户管理、导入预览、Markdown 编辑、历史恢复、发布、回收站、经文对照及完整备份恢复。
@@ -26,6 +26,7 @@
 - 密码：argon2-cffi `25.1.0`；Python 打包：PyInstaller `6.22.2`。
 - 测试：pytest `9.1.1`、httpx `0.28.1`。
 - JS 精确版本以 `package-lock.json` 为准；Python 精确版本以 `backend/uv.lock` 为准。
+- Windows 32 位后端使用 `backend/win32/pyproject.toml` 与独立 `uv.lock`，不包含仅有 64 位二进制包的 Pandoc 和 cryptography。
 - `backend/pyproject.toml` 记录运行依赖及 `dev`（测试）、`build`（打包）依赖组；`backend/uv.lock` 由 uv 生成，不手工编辑。
 - Node 20 已完成构建，但部分打包依赖声明要求 Node `22.12+`；切换运行时后重新验证构建。
 - 远程 MySQL 的实际版本：MySQL5.7.40；不得把本机 MySQL 的版本当成远程版本。
@@ -54,15 +55,17 @@ npm run test:dev
 npm run test:web
 npm run build
 npm run package:mac
+npm run package:win
 ```
 
 - `test:backend` 通过 `uv run --project backend --locked` 执行 pytest，使用临时 SQLite 数据库；导入路径由 `backend/pyproject.toml` 配置。
 - `test:dev` 验证桌面 Vite 与网页网关共存、端口冲突时不启动 Electron、Electron 启动失败时释放端口。
 - `build` 先执行 TypeScript 检查，再生成 `frontend/dist/`。
-- `package:mac` 重新构建前端、用 PyInstaller 打包后端，再用 electron-builder 生成 `.app`。
+- `package:mac` 和 `package:win` 重新构建前端、用 PyInstaller 打包后端，再由 electron-builder 生成当前系统及架构的安装包。
 - 打包包含 Python 服务、Pandoc、数据库驱动及 Alembic 迁移；不能遗漏这些运行资源。
 - 当前已验证产物为 Intel x64，未做 Apple Developer 签名或公证；不得标称通用架构安装包。
-- Apple Silicon 构建与验证：[待补充]。
+- `.github/workflows/build-desktop.yml` 在原生 Intel Mac、Apple Silicon Mac 和 Windows x64/x86 runner 构建，并合并 macOS 通用应用；工作流成功运行前不得把 CI 产物写成已验证。
+- Windows 32 位使用内置 DOCX 兼容转换器，保留常见标题、段落、粗体、斜体和列表；复杂表格、图片及修订必须提示人工核对。
 
 隔离的浏览器界面验证分别在两个终端启动：
 
@@ -185,7 +188,7 @@ VITE_APP_KEY=bible-local-preview-key npm run dev:frontend
 - `.venv/`、`node_modules/`、缓存、构建目录及本机配置不能当作项目源码提交。
 - 格式化工具、额外 lint 规则、分支与提交规范：[待补充]；不得声称已有未配置的工具链。
 - 权限、数据转换、持久化及恢复行为变化必须有相应回归验证。
-- 已有验证覆盖 20 项后端测试、实际 Word 转换、MySQL 集成和独立打包服务运行；修改后重新跑相关检查。
+- 已有验证覆盖 50 项后端测试、实际 Word 转换、32 位兼容 Word 转换、MySQL 集成和独立打包服务运行；修改后重新跑相关检查。
 - SQLite 测试不替代 MySQL 验证；涉及事务、字符集、迁移和恢复时使用可丢弃的 MySQL 测试库。
 - `backend/scripts/mysql_smoke.py` 仅能指向全新、可丢弃且库名包含 `bible_test` 的数据库。
 - `backend/scripts/run_docker_mysql_test.py` 绑定既有本机容器并创建随机测试库，完成后删除本次测试库与账户。

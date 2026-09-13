@@ -13,7 +13,8 @@ app.on('second-instance', () => { if(window) {window.show(); window.focus();} })
 function freePort() { return new Promise((resolve,reject) => {const server = net.createServer();server.once('error',reject);server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});}); }
 async function launchBackend() {
   port = await freePort();
-  const command = app.isPackaged ? path.join(process.resourcesPath,'backend','bible-backend') : path.join(root,'backend','.venv','bin','python');
+  const backendName = process.platform === 'win32' ? 'bible-backend.exe' : 'bible-backend';
+  const command = app.isPackaged ? path.join(process.resourcesPath,'backend',backendName) : path.join(root,'backend','.venv','bin','python');
   const args = app.isPackaged ? [] : [path.join(root,'backend','launcher.py')];
   const dataDir = path.join(app.getPath('userData'), 'library');
   fs.mkdirSync(dataDir,{recursive:true,mode:0o700});

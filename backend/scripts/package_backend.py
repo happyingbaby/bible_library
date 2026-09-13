@@ -2,7 +2,11 @@
 from pathlib import Path
 import subprocess
 import sys
-import pypandoc
 root = Path(__file__).resolve().parents[2]
-pandoc = Path(pypandoc.get_pandoc_path())
-subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--name', 'bible-backend', '--distpath', str(root / 'backend/dist'), '--workpath', str(root / 'backend/build'), '--specpath', str(root / 'backend'), '--paths', str(root / 'backend'), '--collect-all', 'uvicorn', '--collect-all', 'pypandoc', '--collect-all', 'alembic', '--hidden-import', 'pymysql', '--hidden-import', 'app.main', '--hidden-import', 'sqlalchemy.dialects.mysql.pymysql', '--add-data', f'{root / "backend/migrations"}:migrations', '--add-binary', f'{pandoc}:pypandoc/files', str(root / 'backend/launcher.py')], check=True)
+args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--name', 'bible-backend', '--distpath', str(root / 'backend/dist'), '--workpath', str(root / 'backend/build'), '--specpath', str(root / 'backend'), '--paths', str(root / 'backend'), '--collect-all', 'uvicorn', '--collect-all', 'alembic', '--hidden-import', 'pymysql', '--hidden-import', 'app.main', '--hidden-import', 'sqlalchemy.dialects.mysql.pymysql', '--add-data', f'{root / "backend/migrations"}:migrations']
+if sys.maxsize > 2**32:
+    import pypandoc
+    pandoc = Path(pypandoc.get_pandoc_path())
+    args.extend(['--collect-all', 'pypandoc', '--add-binary', f'{pandoc}:pypandoc/files'])
+args.append(str(root / 'backend/launcher.py'))
+subprocess.run(args, check=True)

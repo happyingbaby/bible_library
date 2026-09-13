@@ -208,6 +208,22 @@ def test_real_docx_conversion(client, admin, tmp_path):
     assert not result.json()['warnings']
 
 
+def test_compatible_docx_conversion(client, admin, tmp_path, monkeypatch):
+    import pypandoc
+    source = tmp_path / 'compatible.md'
+    source.write_text('# 标题\n\n正文与**加粗**。\n\n1. 第一项\n2. 第二项\n\n【创1:1-5上】', encoding='utf-8')
+    target = tmp_path / 'compatible.docx'
+    subprocess.run([pypandoc.get_pandoc_path(), str(source), '-o', str(target)], check=True)
+    monkeypatch.setenv('BIBLE_FORCE_BASIC_DOCX', '1')
+    result = client.post('/api/imports/preview', files={'file': ('compatible.docx', target.read_bytes())})
+    assert result.status_code == 200, result.text
+    text = result.json()['markdown']
+    assert '# 标题' in text and '**加粗**' in text
+    assert '1. 第一项' in text and '1. 第二项' in text
+    assert '【创1:1-5上】' in text
+    assert any('兼容转换器' in message for message in result.json()['warnings'])
+
+
 def scripture_payload():
     return {'code':'test-zh','name':'测试译本','language':'zh','source':'测试数据','verses':[{'book':'Gen','chapter':1,'verse':1,'text':'测试第一节'},{'book':'Gen','chapter':1,'verse':3,'text':'测试第三节'}]}
 

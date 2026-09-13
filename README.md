@@ -63,7 +63,7 @@ package.json            # 统一命令、JS 依赖与桌面打包配置
 
 ## 安装和开发
 
-首版安装包为当前机器架构 **Intel x64**，尚未 Apple Developer 签名或公证。Apple Silicon 需要在目标架构环境另行构建并验证，不将当前产物称为通用安装包。
+桌面端构建目标为 macOS 通用版（Intel x64 + Apple Silicon arm64）和 Windows x64/32 位版。安装包尚未 Apple Developer 或 Microsoft 代码签名；首次运行时系统可能显示安全确认。
 
 开发需要 Node.js（建议 22.12+）、uv、Python 3.14+ 和 MySQL（本机验证版本为 8.4）。当前机器使用 Node 20.20.2、Python 3.14.6 完成构建；electron-builder 的间接依赖会对 Node 20 给出引擎版本提示。
 
@@ -96,9 +96,16 @@ npm run test:backend
 ```bash
 npm run build
 npm run package:mac
+npm run package:win
 ```
 
-`package:mac` 会将 Python、Pandoc、数据库驱动与迁移一起打包，日常运行不依赖系统 Python 或 Pandoc。MySQL 保持独立运行。macOS 打包默认生成 `.app`，没有安装向导。
+`package:mac` 和 `package:win` 构建当前操作系统与 CPU 架构的原生安装包。完整的四架构产物由 GitHub Actions 的 `Build desktop clients` 工作流生成：
+
+- `圣经讲义-0.1.0-mac-universal.dmg` / `.zip`：同一个应用兼容 Intel 与 Apple Silicon。
+- `圣经讲义-0.1.0-windows-x64-setup.exe`：Windows 64 位安装程序。
+- `圣经讲义-0.1.0-windows-ia32-setup.exe`：Windows 32 位安装程序，也可运行在 64 位 Windows。
+
+64 位客户端会将 Python、Pandoc、数据库驱动与迁移一起打包。Windows 32 位客户端因现代 Pandoc 和 `cryptography` 已停止提供 x86 二进制包，使用独立锁定依赖和内置 DOCX 兼容转换器；它支持常见标题、段落、粗体、斜体和列表，复杂表格、图片及修订会在导入预览中提示人工核对。MySQL 保持独立运行。
 
 ## 后端与数据
 

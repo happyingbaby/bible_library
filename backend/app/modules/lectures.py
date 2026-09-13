@@ -1,6 +1,8 @@
 import json
+import os
 import re
 import subprocess
+import sys
 import tempfile
 import uuid
 import zipfile
@@ -177,18 +179,25 @@ def convert_docx(path):
             source_text = ''.join(node.text or '' for node in root.iter() if node.tag.endswith('}t'))
     except (zipfile.BadZipFile, KeyError, ET.ParseError):
         raise HTTPException(422, '不是有效的 Word .docx 文件')
-    try:
-        import pypandoc
-        proc = subprocess.run([pypandoc.get_pandoc_path(), str(path), '-f', 'docx', '-t', 'gfm', '--wrap=none', '--track-changes=all'], capture_output=True, text=True, timeout=60)
-        if proc.returncode:
-            raise HTTPException(422, 'Word 转换失败，请检查原始文件')
-        markdown = proc.stdout
-        if proc.stderr:
-            warnings.append('转换工具报告了格式兼容提示，请核对预览。')
-    except (OSError, RuntimeError):
-        raise HTTPException(503, '缺少 Pandoc，请安装后重试')
-    except subprocess.TimeoutExpired:
-        raise HTTPException(422, '转换超时，请拆分文档后重试')
+    force_basic = os.environ.get('BIBLE_FORCE_BASIC_DOCX') == '1' or sys.maxsize <= 2**32
+    if not force_basic:
+        try:
+            import pypandoc
+            proc = subprocess.run([pypandoc.get_pandoc_path(), str(path), '-f', 'docx', '-t', 'gfm', '--wrap=none', '--track-changes=all'], capture_output=True, text=True, timeout=60)
+            if proc.returncode:
+                raise HTTPException(422, 'Word 转换失败，请检查原始文件')
+            markdown = proc.stdout
+            if proc.stderr:
+                warnings.append('转换工具报告了格式兼容提示，请核对预览。')
+        except (ImportError, OSError, RuntimeError):
+            force_basic = True
+        except subprocess.TimeoutExpired:
+            raise HTTPException(422, '转换超时，请拆分文档后重试')
+    if force_basic:
+        from app.docx import to_markdown
+        with zipfile.ZipFile(path) as archive:
+            markdown = to_markdown(archive)
+        warnings.append('当前客户端使用兼容转换器；图片、复杂表格及修订内容请对照原文核对。')
     # Check text as an ordered subsequence: catches dropped text, tolerates Markdown punctuation.
     target = re.sub(r'\s+', '', markdown)
     cursor = iter(target)
