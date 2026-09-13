@@ -9,12 +9,10 @@ on:
 permissions:
   contents: read
 
-env:
-  UV_DEFAULT_INDEX: https://pypi.org/simple
-
 jobs:
   mac-native:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x64
@@ -28,6 +26,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14.6'
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.12.5'
@@ -35,7 +36,7 @@ jobs:
       - run: npm ci
       - name: Verify native architecture
         run: test "$(uname -m)" = "${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
-      - run: uv sync --project backend --locked --group build
+      - run: uv sync --project backend --locked --group build --python "$pythonLocation/bin/python"
       - run: npm run package:mac:dir -- --${{ matrix.arch }} --config.directories.output=release/mac-${{ matrix.arch }}
       - name: Preserve app permissions and symlinks
         run: |
