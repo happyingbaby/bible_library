@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {BookOpen,Search,Plus,Upload,Users,Database,Archive,LogOut,ChevronRight,X,FileText,PanelRightClose,Save,History,Download,Trash2,Settings,ArrowLeft,Check,LockKeyhole,Library,BookMarked,RefreshCw,Eye,PenLine} from 'lucide-react';
-import {api,configure,download,setToken,User,Lecture,Ref,Translation} from './api';
+import {api,configure,download,setToken,User,Lecture,Ref,Translation,BibleBook} from './api';
 import './style.css';
 import ScriptureManager from './ScriptureManager';
 import Modal from './Modal';
@@ -14,7 +14,7 @@ function App(){
   const [status,setStatus]=useState<any>(null),[user,setUser]=useState<User|null>(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
   const [items,setItems]=useState<Lecture[]>([]),[lecture,setLecture]=useState<Lecture|null>(null),[query,setQuery]=useState(''),[trash,setTrash]=useState(false),[category,setCategory]=useState('');
   const [editing,setEditing]=useState(false),[draft,setDraft]=useState({title:'',author:'',sermon_date:'',markdown:'',category:'',tags:''}),[preview,setPreview]=useState<{html:string;references:Ref[]}>({html:'',references:[]});
-  const [modal,setModal]=useState(''),[pending,setPending]=useState<any>(null),[users,setUsers]=useState<User[]>([]),[translations,setTranslations]=useState<Translation[]>([]),[versions,setVersions]=useState<any[]>([]);
+  const [modal,setModal]=useState(''),[pending,setPending]=useState<any>(null),[users,setUsers]=useState<User[]>([]),[translations,setTranslations]=useState<Translation[]>([]),[books,setBooks]=useState<BibleBook[]>([]),[versions,setVersions]=useState<any[]>([]);
   const [importFileName,setImportFileName]=useState('');
   const [reference,setReference]=useState<Ref|null>(null),[zh,setZh]=useState(''),[en,setEn]=useState(''),[verses,setVerses]=useState<any>({}),[verseError,setVerseError]=useState(''),[verseLoading,setVerseLoading]=useState(false);
   const [login,setLogin]=useState({username:'',password:'',display_name:''}),[connection,setConnection]=useState({host:'127.0.0.1',port:3307,username:'bible_library_app',password:'',database:'bible_library'});
@@ -27,7 +27,7 @@ function App(){
   const run=async(fn:()=>Promise<void>)=>{setBusy(true);setError('');try{await fn();}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
   const loadStatus=async()=>setStatus(await api('/status'));
   const loadList=async()=>setItems(await api<Lecture[]>(`/lectures?q=${encodeURIComponent(query)}&trash=${trash}`));
-  const loadTranslations=async()=>{const ts=await api<Translation[]>('/translations');setTranslations(ts);setZh(v=>ts.some(t=>String(t.id)===v)?v:String(ts.find(t=>t.language.toLowerCase().startsWith('zh'))?.id||''));setEn(v=>ts.some(t=>String(t.id)===v)?v:String(ts.find(t=>t.language.toLowerCase().startsWith('en'))?.id||''));};
+  const loadTranslations=async()=>{const [ts,bookList]=await Promise.all([api<Translation[]>('/translations'),api<BibleBook[]>('/books')]);setTranslations(ts);setBooks(bookList);setZh(v=>ts.some(t=>String(t.id)===v)?v:String(ts.find(t=>t.language.toLowerCase().startsWith('zh'))?.id||''));setEn(v=>ts.some(t=>String(t.id)===v)?v:String(ts.find(t=>t.language.toLowerCase().startsWith('en'))?.id||''));};
   const acceptLecture=(l:Lecture)=>{setLecture(l);setDraft({title:l.title,author:l.author,sermon_date:l.sermon_date||'',markdown:l.markdown,category:l.category,tags:l.tags.join(', ')});setPreview({html:l.html,references:l.references});setReference(null);};
   const authenticate=(result:{token:string;user:User})=>{
     // Successful authentication also proves setup is complete, including the first administrator.
@@ -39,6 +39,7 @@ function App(){
   useEffect(()=>window.desktop?.onBackendError(setError),[]);
   useEffect(()=>{if(user&&!user.must_change_password){run(async()=>{await loadList();await loadTranslations();});}},[user,query,trash]);
   useEffect(()=>{if(!editing)return;let canceled=false;const timer=setTimeout(()=>{api('/render','POST',{markdown:draft.markdown}).then(result=>{if(!canceled)setPreview(result);}).catch(e=>{if(!canceled)setError(e.message);});},300);return()=>{canceled=true;clearTimeout(timer);};},[draft.markdown,editing]);
+  useEffect(()=>{if(!reference?.book||reference.book_name)return;const match=books.find(book=>book.code===reference.book);if(match)setReference({...reference,book_name:match.name});},[reference,books]);
   useEffect(()=>{let canceled=false;setVerses({});setVerseError('');if(!reference||reference.status!=='valid'){setVerseLoading(false);return;}setVerseLoading(true);const fetchVerse=async(id:string)=>id?api(`/verses?translation_id=${id}&book=${reference.book}&chapter=${reference.chapter}&start=${reference.start}&end=${reference.end}`):[];Promise.all([fetchVerse(zh),fetchVerse(en)]).then(([a,b])=>{if(!canceled)setVerses({zh:a,en:b});}).catch(e=>{if(!canceled)setVerseError(e.message);}).finally(()=>{if(!canceled)setVerseLoading(false);});return()=>{canceled=true;};},[reference,zh,en]);
   useEffect(()=>{if(notice){const timer=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(timer);}},[notice]);
   const openLecture=async(id:number)=>{if(!guard())return;await run(async()=>{acceptLecture(await api(`/lectures/${id}`));setEditing(false);});};

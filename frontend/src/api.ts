@@ -2,6 +2,7 @@ export type User = {id:number;username:string;display_name:string;role:'admin'|'
 export type Ref = {ordinal:number;raw:string;status:string;message:string;book?:string;book_name?:string;chapter?:number;start?:number;end?:number;part?:string};
 export type Lecture = {id:number;title:string;author:string;sermon_date:string|null;category:string;tags:string[];published:boolean;deleted:boolean;revision:number;updated_at:string;markdown:string;html:string;references:Ref[];import_report:string[];has_original:boolean;original_extension:string};
 export type Translation = {id:number;code:string;name:string;language:string;source:string;revision:number};
+export type BibleBook = {code:string;name:string;chapters:number};
 declare global {interface Window {desktop?:{connection:()=>Promise<{base:string;key:string;error?:string}>;saveFile:(name:string,bytes:Uint8Array)=>Promise<boolean>;onClose:(fn:()=>void)=>()=>void;confirmClose:()=>void;onBackendError:(fn:(message:string)=>void)=>()=>void}}}
 let base='http://127.0.0.1:8765/api';
 let key='';
