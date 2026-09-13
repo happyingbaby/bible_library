@@ -175,7 +175,7 @@ npm run build
 新安装包预设 `39.102.143.118:3306`，数据库与用户名均为 `bible_library`，无需在客户端电脑安装 MySQL。
 
 1. 本机构建读取 `.local/database-defaults.json`（不提交 Git，权限 0600）；也可通过 `BIBLE_DB_PASSWORD` 环境变量提供打包密码。
-2. GitHub Actions 需要仓库 Actions Secret `BIBLE_DB_PASSWORD`。缺少密码时构建会明确失败，避免生成不能自动连接的包。
+2. 公开 GitHub Actions 使用 `BIBLE_CREDENTIAL_FREE_BUILD=1` 生成不含数据库密码的中间安装包；下载到本机后再加入本机连接配置并重建内部 DMG。不得将含密码的包上传到公开仓库或构建产物。普通本机构建缺少密码时会明确失败。
 3. 在原生 Apple Silicon 和 Intel runner 分别生成 `mac-arm64.dmg` 与 `mac-x64.dmg`；应用与 Python 后端必须架构一致，CI 会核验。
 4. 连接优先级：运行时 `DATABASE_URL` → 已有 `database.json` → 运行时 `BIBLE_DB_PASSWORD` 配合默认线上参数 → 安装包预设配置。已有本机配置不会被新包覆盖；旧配置仍指向本机时，在连接页面更新为线上地址。
 

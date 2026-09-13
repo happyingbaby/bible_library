@@ -12,7 +12,7 @@ permissions:
 jobs:
   mac-native:
     env:
-      BIBLE_DB_PASSWORD: ${{ secrets.BIBLE_DB_PASSWORD }}
+      BIBLE_CREDENTIAL_FREE_BUILD: '1'
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +56,7 @@ jobs:
 
   windows:
     env:
-      BIBLE_DB_PASSWORD: ${{ secrets.BIBLE_DB_PASSWORD }}
+      BIBLE_CREDENTIAL_FREE_BUILD: '1'
     strategy:
       fail-fast: false
       matrix:

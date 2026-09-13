@@ -27,8 +27,9 @@ with tempfile.TemporaryDirectory(prefix='bible-build-config-') as temporary:
         if any(saved.get(key) != value for key, value in config.items()):
             raise SystemExit('Local package database target differs from the expected online database')
         config['password'] = saved.get('password', '')
-    if not config.get('password'):
+    if not config.get('password') and os.environ.get('BIBLE_CREDENTIAL_FREE_BUILD') != '1':
         raise SystemExit('Set BIBLE_DB_PASSWORD or .local/database-defaults.json before packaging')
+    config.setdefault('password', '')
     bundled = Path(temporary) / 'database-defaults.json'
     bundled.write_text(json.dumps(config), encoding='utf-8')
     bundled.chmod(0o600)

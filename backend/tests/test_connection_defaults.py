@@ -96,3 +96,22 @@ def test_packager_includes_temporary_config(monkeypatch,tmp_path):
     monkeypatch.delenv('BIBLE_DB_PASSWORD')
     with pytest.raises(SystemExit,match='Set BIBLE_DB_PASSWORD'):
         runpy.run_path(str(script),run_name='__main__')
+
+
+
+def test_credential_free_ci_package(monkeypatch,tmp_path):
+    import runpy, subprocess, sys
+    from pathlib import Path
+    script=tmp_path/'backend/scripts/package_backend.py'
+    script.parent.mkdir(parents=True)
+    script.write_text((Path(__file__).parents[1]/'scripts/package_backend.py').read_text())
+    monkeypatch.setattr(sys,'maxsize',2**31-1)
+    monkeypatch.delenv('BIBLE_DB_PASSWORD',raising=False)
+    monkeypatch.setenv('BIBLE_CREDENTIAL_FREE_BUILD','1')
+    def run(args,check):
+        spec=args[args.index('--add-data',args.index('--add-data')+1)+1]
+        config=json.loads(Path(spec.rsplit(':',1)[0]).read_text())
+        assert config['password']==''
+        assert config['host']=='39.102.143.118'
+    monkeypatch.setattr(subprocess,'run',run)
+    runpy.run_path(str(script),run_name='__main__')
