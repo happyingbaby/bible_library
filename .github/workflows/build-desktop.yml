@@ -74,7 +74,9 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent release/universal/'圣经讲义.app' "release/圣经讲义-${VERSION}-mac-universal.zip"
           hdiutil create -volname '圣经讲义' -srcfolder release/universal/'圣经讲义.app' -ov -format UDZO "release/圣经讲义-${VERSION}-mac-universal.dmg"
           lipo -archs release/universal/'圣经讲义.app'/Contents/MacOS/'圣经讲义'
-          lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend/bible-backend
+          test "$(lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend-x64/bible-backend)" = "x86_64"
+          test "$(lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend-arm64/bible-backend)" = "arm64"
+          codesign --verify --deep --strict release/universal/'圣经讲义.app'
       - uses: actions/upload-artifact@v4
         with:
           name: mac-universal

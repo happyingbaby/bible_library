@@ -14,7 +14,9 @@ function freePort() { return new Promise((resolve,reject) => {const server = net
 async function launchBackend() {
   port = await freePort();
   const backendName = process.platform === 'win32' ? 'bible-backend.exe' : 'bible-backend';
-  const command = app.isPackaged ? path.join(process.resourcesPath,'backend',backendName) : path.join(root,'backend','.venv','bin','python');
+  const nativeBackendDir = process.platform === 'darwin' ? `backend-${process.arch}` : 'backend';
+  const packagedBackendDir = path.join(process.resourcesPath,nativeBackendDir);
+  const command = app.isPackaged ? path.join(fs.existsSync(packagedBackendDir) ? packagedBackendDir : path.join(process.resourcesPath,'backend'),backendName) : path.join(root,'backend','.venv','bin','python');
   const args = app.isPackaged ? [] : [path.join(root,'backend','launcher.py')];
   const dataDir = path.join(app.getPath('userData'), 'library');
   fs.mkdirSync(dataDir,{recursive:true,mode:0o700});
