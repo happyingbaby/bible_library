@@ -118,6 +118,16 @@ def test_six_reference_forms(raw,end):
     assert (ref['book'],ref['book_name'],ref['chapter'],ref['start'],ref['end'],ref['status']) == ('Gen','创世记',1,1,end,'valid')
 
 
+@pytest.mark.parametrize('raw', ['【约壹4:9-10】', '【約壹4:9-10】'])
+def test_first_john_financial_numeral_alias(raw):
+    result = render(raw)
+    assert len(result['references']) == 1
+    ref = result['references'][0]
+    assert (ref['book'], ref['book_name'], ref['chapter'], ref['start'], ref['end'], ref['status']) == (
+        '1John', '约翰一书', 4, 9, 10, 'valid'
+    )
+
+
 def test_reference_exclusions_and_invalid():
     result = render('`【创1:1】` [【创1:2】](https://example.com)\n\n```\n【创1:3】\n```\n\n【创1:5-1】【未知1:1】【创51:1】【创1:1】【创1:1】\n\n<script>alert(1)</script>')
     assert len(result['references']) == 5
