@@ -19,8 +19,10 @@ async function launchBackend() {
   const command = app.isPackaged ? path.join(fs.existsSync(packagedBackendDir) ? packagedBackendDir : path.join(process.resourcesPath,'backend'),backendName) : path.join(root,'backend','.venv','bin','python');
   const args = app.isPackaged ? [] : [path.join(root,'backend','launcher.py')];
   const dataDir = path.join(app.getPath('userData'), 'library');
+  const projectDatabaseConfig = path.join(root,'.local','database-defaults.json');
+  const databaseConfig = !app.isPackaged && fs.existsSync(projectDatabaseConfig) ? {BIBLE_DATABASE_CONFIG:projectDatabaseConfig} : {};
   fs.mkdirSync(dataDir,{recursive:true,mode:0o700});
-  backend = spawn(command,args,{cwd: app.isPackaged ? process.resourcesPath : root,env:{...process.env,BIBLE_APP_KEY:key,BIBLE_PORT:String(port),BIBLE_DATA_DIR:dataDir,PYTHONUNBUFFERED:'1'},stdio:['ignore','pipe','pipe']});
+  backend = spawn(command,args,{cwd: app.isPackaged ? process.resourcesPath : root,env:{...process.env,...databaseConfig,BIBLE_APP_KEY:key,BIBLE_PORT:String(port),BIBLE_DATA_DIR:dataDir,PYTHONUNBUFFERED:'1'},stdio:['ignore','pipe','pipe']});
   backend.on('error',()=>{backendError='无法启动 Python 服务。开发环境请先运行 npm run sync:backend；安装版请重新安装应用。';});
   backend.on('exit',()=>{if(!closing) {backendError='本地服务已停止，请重新启动应用。';window?.webContents.send('backend-error',backendError);}});
   // Consume pipes to avoid blocking without persisting credentials or request bodies.
@@ -28,7 +30,15 @@ async function launchBackend() {
   backend.stderr.on('data',chunk=>{if(!app.isPackaged) process.stderr.write(chunk);});
   for(let i=0;i<150;i++) {
     if(backendError) return;
-    try {const r=await fetch(`http://127.0.0.1:${port}/api/status`,{headers:{'X-App-Key':key},signal:AbortSignal.timeout(1000)});if(r.ok)return;}catch{}
+    try {
+      const r=await fetch(`http://127.0.0.1:${port}/api/status`,{headers:{'X-App-Key':key},signal:AbortSignal.timeout(1000)});
+      if(r.ok) {
+        const status=await r.json();
+        if(status.connected) console.log('桌面后端已连接数据库。');
+        else console.error(status.error || '桌面后端数据库连接失败。');
+        return;
+      }
+    } catch {}
     await new Promise(r=>setTimeout(r,300));
   }
   backendError='服务启动超时，请检查 MySQL 连接后重新启动。';

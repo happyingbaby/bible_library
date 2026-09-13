@@ -20,15 +20,17 @@ args.append(str(root / 'backend/launcher.py'))
 with tempfile.TemporaryDirectory(prefix='bible-build-config-') as temporary:
     config = {'host':'39.102.143.118', 'port':3306, 'username':'bible_library', 'database':'bible_library'}
     local_config = root / '.local' / 'database-defaults.json'
+    if local_config.is_file():
+        saved = json.loads(local_config.read_text())
+        required = ('host','port','username','password','database')
+        missing = [key for key in required if key not in saved]
+        if missing:
+            raise SystemExit('Local database config is missing: ' + ', '.join(missing))
+        config = {key:saved[key] for key in required}
     if os.environ.get('BIBLE_DB_PASSWORD'):
         config['password'] = os.environ['BIBLE_DB_PASSWORD']
-    elif local_config.is_file():
-        saved = json.loads(local_config.read_text())
-        if any(saved.get(key) != value for key, value in config.items()):
-            raise SystemExit('Local package database target differs from the expected online database')
-        config['password'] = saved.get('password', '')
     if not config.get('password') and os.environ.get('BIBLE_CREDENTIAL_FREE_BUILD') != '1':
-        raise SystemExit('Set BIBLE_DB_PASSWORD or .local/database-defaults.json before packaging')
+        raise SystemExit('Set BIBLE_DB_PASSWORD or configure .local/database-defaults.json before packaging')
     config.setdefault('password', '')
     bundled = Path(temporary) / 'database-defaults.json'
     bundled.write_text(json.dumps(config), encoding='utf-8')

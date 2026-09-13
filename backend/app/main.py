@@ -85,7 +85,8 @@ def configure(data: Connection, authorization: str = Header(default='')):
             database.connect(database.mysql_url(data.model_dump()))
         except Exception as exc:
             raise HTTPException(400, database.connection_message(exc))
-        path = database.DATA_DIR / 'database.json'
+        path = database.writable_connection_path()
+        path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix('.tmp')
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, 'w') as stream:

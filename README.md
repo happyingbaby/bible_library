@@ -174,12 +174,12 @@ npm run build
 
 新安装包预设 `39.102.143.118:3306`，数据库与用户名均为 `bible_library`，无需在客户端电脑安装 MySQL。
 
-1. 本机构建读取 `.local/database-defaults.json`（不提交 Git，权限 0600）；也可通过 `BIBLE_DB_PASSWORD` 环境变量提供打包密码。
+1. 所有本地开发和本机构建统一读取 `.local/database-defaults.json`（不提交 Git，权限 0600）。复制 `config/database.example.json` 后填写 `host`、`port`、`username`、`password`、`database` 五项；修改后重启 `npm run dev` 或 `npm run web` 即可生效。连接页面保存时也会更新这份文件。
 2. 公开 GitHub Actions 使用 `BIBLE_CREDENTIAL_FREE_BUILD=1` 生成不含数据库密码的中间安装包；下载到本机后再加入本机连接配置并重建内部 DMG。不得将含密码的包上传到公开仓库或构建产物。普通本机构建缺少密码时会明确失败。
 3. 在原生 Apple Silicon 和 Intel runner 分别生成 `mac-arm64.dmg` 与 `mac-x64.dmg`；应用与 Python 后端必须架构一致，CI 会核验。
-4. 连接优先级：运行时 `DATABASE_URL` → 已有 `database.json` → 运行时 `BIBLE_DB_PASSWORD` 配合默认线上参数 → 安装包预设配置。已有本机配置不会被新包覆盖；旧配置仍指向本机时，在连接页面更新为线上地址。
+4. 连接优先级：运行时 `DATABASE_URL` → 开发配置 `BIBLE_DATABASE_CONFIG`（npm 脚本自动指向 `.local/database-defaults.json`）→ 已有应用资料目录 `database.json` → 运行时 `BIBLE_DB_PASSWORD` 配合默认参数 → 安装包预设配置。安装版已有本机配置不会被新包覆盖。
 
-默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。开发／网页版没有本机连接配置且未设置环境变量时，仍提示输入数据库密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
+`.local/database-defaults.json` 是当前项目唯一需要手工修改的数据库连接文件。它包含密码，已由 `.gitignore` 排除；不得提交、粘贴到日志或上传。默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
 
 2026-09-13：代码构建和 56 项后端隔离测试通过；GitHub Actions 运行 `34760952746` 已完成两个原生架构构建。两份本机内部 DMG 的架构、内置配置、签名及镜像完整性均已校验，Intel 包内后端通过临时 SQLite 启动与迁移验证。本次验证未连接正式数据库，Apple Silicon 包尚未在 M5 实机验收。
 

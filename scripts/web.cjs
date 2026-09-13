@@ -67,8 +67,10 @@ async function main() {
   // Claim the web port before starting a backend that can apply migrations.
   const port = await listen(server, Number(process.env.BIBLE_WEB_PORT || 5173));
   const dataDir = process.env.BIBLE_DATA_DIR || path.join(os.homedir(), 'Library/Application Support/圣经讲义/library');
+  const projectDatabaseConfig = path.join(root, '.local/database-defaults.json');
+  const databaseConfig = fs.existsSync(projectDatabaseConfig) ? {BIBLE_DATABASE_CONFIG:projectDatabaseConfig} : {};
   const backend = spawn(path.join(root, 'backend/.venv/bin/python'), [path.join(root, 'backend/launcher.py')], {
-    cwd:root, env:{...process.env, BIBLE_DATA_DIR:dataDir, BIBLE_APP_KEY:key, BIBLE_PORT:String(backendPort)},
+    cwd:root, env:{...process.env, ...databaseConfig, BIBLE_DATA_DIR:dataDir, BIBLE_APP_KEY:key, BIBLE_PORT:String(backendPort)},
     stdio:['ignore','ignore','ignore']
   });
   let stopped = false;
