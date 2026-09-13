@@ -154,8 +154,10 @@ def test_markdown_import_and_duplicates(client, admin):
     preview = client.post('/api/imports/preview', files={'file':('讲义.md',markdown.encode(),'text/markdown')})
     assert preview.status_code == 200, preview.text
     assert preview.json()['markdown'] == markdown
-    confirmed = client.post('/api/imports/confirm', json={'preview_id':preview.json()['preview_id'],'title':'导入讲义','author':'王牧师','sermon_date':'2026-09-10'})
+    confirmed = client.post('/api/imports/confirm', json={'preview_id':preview.json()['preview_id'],'title':'导入讲义','author':'王牧师','sermon_date':'2026-09-10','category':'主日讲道','tags':['恩典','约翰福音']})
     assert confirmed.status_code == 200
+    assert confirmed.json()['category'] == '主日讲道'
+    assert confirmed.json()['tags'] == ['恩典', '约翰福音']
     assert confirmed.json()['published'] is False
     assert confirmed.json()['author'] == '王牧师' and confirmed.json()['sermon_date'] == '2026-09-10'
     assert client.get(f'/api/lectures/{confirmed.json()["id"]}/original').content == markdown.encode()

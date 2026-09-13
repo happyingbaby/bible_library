@@ -36,6 +36,8 @@ class Confirm(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     author: str = Field(default='', max_length=100)
     sermon_date: date | None = None
+    category: str = Field(default='', max_length=100)
+    tags: list[str] = Field(default_factory=list, max_length=30)
 
 class Publish(BaseModel):
     published: bool
@@ -222,7 +224,7 @@ def import_preview(file: UploadFile = File(...), user=Depends(admin)):
             raise HTTPException(422, '正文超过 200 万字符，请拆分导入')
         report = {'owner': user.id, 'markdown': markdown, 'warnings': warnings, 'filename': path.name, 'created_at': now().isoformat()}
         (pending / (preview_id + '.json')).write_text(json.dumps(report, ensure_ascii=False), encoding='utf-8')
-        return {'preview_id': preview_id, 'title': Path(file.filename).stem, 'author': '', 'sermon_date': None, 'markdown': markdown, 'warnings': warnings, **render(markdown)}
+        return {'preview_id': preview_id, 'title': Path(file.filename).stem, 'author': '', 'sermon_date': None, 'category': '', 'tags': '', 'markdown': markdown, 'warnings': warnings, **render(markdown)}
     except Exception:
         path.unlink(missing_ok=True)
         raise
@@ -240,7 +242,7 @@ def confirm_import(data: Confirm, user=Depends(admin), db=Depends(get_db)):
     target = DATA_DIR / 'originals' / filename
     target.write_bytes((pending / filename).read_bytes())
     try:
-        item = Lecture(title=data.title, author=data.author, sermon_date=data.sermon_date, markdown=report['markdown'], category='', tags=[], created_by=user.id, updated_by=user.id, original_file=filename, import_report=report['warnings'], revision=1, published=False, deleted=False)
+        item = Lecture(title=data.title, author=data.author, sermon_date=data.sermon_date, markdown=report['markdown'], category=data.category, tags=data.tags, created_by=user.id, updated_by=user.id, original_file=filename, import_report=report['warnings'], revision=1, published=False, deleted=False)
         db.add(item)
         db.flush()
         history(db, item, user)
