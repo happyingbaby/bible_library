@@ -181,4 +181,13 @@ npm run build
 
 默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。开发／网页版没有本机连接配置且未设置环境变量时，仍提示输入数据库密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
 
-本次修改验证了代码构建和隔离测试；两个新 DMG 尚需运行 CI 构建，未在 M5 实机验收。
+2026-09-13：代码构建和 56 项后端隔离测试通过；GitHub Actions 运行 `34760952746` 已完成两个原生架构构建。两份本机内部 DMG 的架构、内置配置、签名及镜像完整性均已校验，Intel 包内后端通过临时 SQLite 启动与迁移验证。本次验证未连接正式数据库，Apple Silicon 包尚未在 M5 实机验收。
+
+内部 Mac 安装包封装（仅在本机执行，不上传生成结果）：
+
+```bash
+python3 scripts/finalize-internal-mac.py 下载的mac-arm64.dmg release/internal/圣经讲义-0.1.0-mac-arm64-internal.dmg --arch arm64
+python3 scripts/finalize-internal-mac.py 下载的mac-x64.dmg release/internal/圣经讲义-0.1.0-mac-x64-internal.dmg --arch x64
+```
+
+脚本从 `.local/database-defaults.json` 加入连接配置，核验应用和后端的架构，重新执行本机 ad-hoc 签名及 DMG 完整性校验。不覆盖已存在的输出文件；这些内部包未经过 Apple Developer 签名或公证。
