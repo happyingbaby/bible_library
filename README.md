@@ -101,7 +101,7 @@ npm run package:win
 
 `package:mac` 和 `package:win` 构建当前操作系统与 CPU 架构的原生安装包。完整的四架构产物由 GitHub Actions 的 `Build desktop clients` 工作流生成：
 
-- `圣经讲义-0.1.0-mac-universal.dmg` / `.zip`：同一个应用兼容 Intel 与 Apple Silicon。
+- `圣经讲义-0.1.0-mac-universal.dmg`：同一个应用兼容 Intel 与 Apple Silicon。
 - `圣经讲义-0.1.0-windows-x64-setup.exe`：Windows 64 位安装程序。
 - `圣经讲义-0.1.0-windows-ia32-setup.exe`：Windows 32 位安装程序，也可运行在 64 位 Windows。
 

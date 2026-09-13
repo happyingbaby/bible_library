@@ -71,7 +71,6 @@ jobs:
           node scripts/make-universal-mac.cjs inputs/x64/'圣经讲义.app' inputs/arm64/'圣经讲义.app' release/universal/'圣经讲义.app'
           codesign --force --deep --sign - release/universal/'圣经讲义.app'
           VERSION=$(node -p "require('./package.json').version")
-          ditto -c -k --sequesterRsrc --keepParent release/universal/'圣经讲义.app' "release/圣经讲义-${VERSION}-mac-universal.zip"
           hdiutil create -volname '圣经讲义' -srcfolder release/universal/'圣经讲义.app' -ov -format UDZO "release/圣经讲义-${VERSION}-mac-universal.dmg"
           lipo -archs release/universal/'圣经讲义.app'/Contents/MacOS/'圣经讲义'
           test "$(lipo -archs release/universal/'圣经讲义.app'/Contents/Resources/backend-x64/bible-backend)" = "x86_64"
@@ -80,9 +79,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mac-universal
-          path: |
-            release/*-mac-universal.zip
-            release/*-mac-universal.dmg
+          path: release/*-mac-universal.dmg
           if-no-files-found: error
 
   windows:
