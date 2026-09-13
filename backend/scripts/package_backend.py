@@ -7,6 +7,10 @@ args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir
 if sys.maxsize > 2**32:
     import pypandoc
     pandoc = Path(pypandoc.get_pandoc_path())
+    if not pandoc.exists() and sys.platform == 'win32':
+        pandoc_exe = pandoc.with_suffix('.exe')
+        if pandoc_exe.exists():
+            pandoc = pandoc_exe
     args.extend(['--collect-all', 'pypandoc', '--add-binary', f'{pandoc}:pypandoc/files'])
 args.append(str(root / 'backend/launcher.py'))
 subprocess.run(args, check=True)
