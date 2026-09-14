@@ -11,60 +11,30 @@ permissions:
 
 jobs:
   mac-native:
-    env:
-      BIBLE_CREDENTIAL_FREE_BUILD: '1'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            runner: macos-15-intel
-          - arch: arm64
-            runner: macos-15
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.14.6'
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: '0.12.5'
-          enable-cache: true
       - run: npm ci
       - name: Verify native architecture
-        run: test "$(uname -m)" = "${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
-      - run: uv sync --project backend --locked --group build --python "$pythonLocation/bin/python"
-      - run: npm run package:mac:native -- --${{ matrix.arch }} --config.directories.output=release/mac-${{ matrix.arch }}
-      - name: Verify app and backend architecture
+        run: test "$(uname -m)" = "arm64"
+      - run: npm run package:mac:native -- --arm64 --config.directories.output=release/mac-arm64
+      - name: Verify app architecture
         shell: bash
         run: |
-          APP_PATH=$(find release/mac-${{ matrix.arch }} -maxdepth 2 -name '圣经讲义.app' -type d -print -quit)
+          APP_PATH=$(find release/mac-arm64 -maxdepth 2 -name '圣经讲义.app' -type d -print -quit)
           test -n "$APP_PATH"
-          EXPECTED="${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
-          test "$(lipo -archs "$APP_PATH/Contents/MacOS/圣经讲义")" = "$EXPECTED"
-          test "$(lipo -archs "$APP_PATH/Contents/Resources/backend/bible-backend")" = "$EXPECTED"
+          test "$(lipo -archs "$APP_PATH/Contents/MacOS/圣经讲义")" = "arm64"
       - uses: actions/upload-artifact@v4
         with:
-          name: mac-${{ matrix.arch == 'arm64' && 'Apple-Silicon' || 'Intel' }}
-          path: release/mac-${{ matrix.arch }}/*-mac-${{ matrix.arch }}.dmg
+          name: mac-Apple-Silicon
+          path: release/mac-arm64/*-mac-arm64.dmg
           if-no-files-found: error
 
   windows:
-    env:
-      BIBLE_CREDENTIAL_FREE_BUILD: '1'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            python-arch: x64
-          - arch: ia32
-            python-arch: x86
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
@@ -73,28 +43,10 @@ jobs:
           node-version: '22'
           architecture: x64
           cache: npm
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.14.6'
-          architecture: ${{ matrix.python-arch }}
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: '0.12.5'
-          enable-cache: true
       - run: npm ci
-      - name: Sync architecture-specific backend
-        shell: pwsh
-        run: |
-          if ("${{ matrix.arch }}" -eq "ia32") {
-            uv sync --project backend/win32 --locked --group build --python "$env:pythonLocation\python.exe"
-          } else {
-            uv sync --project backend --locked --group build --python "$env:pythonLocation\python.exe"
-          }
-      - run: npm run package:win -- --${{ matrix.arch }}
-        env:
-          BIBLE_BUILD_ARCH: ${{ matrix.arch }}
+      - run: npm run package:win -- --x64
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}
-          path: release/*-windows-${{ matrix.arch }}-setup.exe
+          name: windows-x64
+          path: release/*-windows-x64-setup.exe
           if-no-files-found: error

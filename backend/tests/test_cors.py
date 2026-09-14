@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.parametrize('origin', ['http://127.0.0.1:5174', 'http://127.0.0.1:5173', 'null'])
+@pytest.mark.parametrize('origin', ['https://library.fdeline.com', 'http://127.0.0.1:5174', 'http://127.0.0.1:5173', 'null'])
 def test_local_clients_can_preflight_and_read_status(client, origin):
     preflight = client.options('/api/status', headers={
         'Origin': origin,

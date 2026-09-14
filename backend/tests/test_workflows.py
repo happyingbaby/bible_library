@@ -307,6 +307,17 @@ def test_reader_cannot_reconfigure_database_or_import_scripture(client, admin):
     assert client.post('/api/backups/restore',json={'preview_id':'a'*32}).status_code == 403
 
 
+def test_remote_mode_disables_connection_configuration(client, monkeypatch):
+    from app import main
+    monkeypatch.setattr(main, 'ALLOW_CONNECTION_CONFIG', False)
+    response = client.post('/api/connection', json={
+        'host':'127.0.0.1', 'port':3306, 'username':'root',
+        'password':'x', 'database':'bible_library',
+    })
+    assert response.status_code == 403
+    assert '服务器管理员' in response.json()['detail']
+
+
 def test_backup_foreign_key_corruption_rejected(client, admin):
     lecture = create_lecture(client)
     raw = client.get('/api/backups').content

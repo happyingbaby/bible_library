@@ -1,0 +1,12 @@
+*
+!backend/
+backend/*
+!backend/app/
+!backend/app/**
+!backend/migrations/
+!backend/migrations/**
+!backend/launcher.py
+!backend/pyproject.toml
+!backend/uv.lock
+!deploy/
+!deploy/Dockerfile

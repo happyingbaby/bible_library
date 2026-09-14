@@ -12,6 +12,8 @@ from app.models import User
 from app.modules import accounts, backups, lectures, scripture
 
 APP_KEY = os.environ.get('BIBLE_APP_KEY', '')
+REQUIRE_APP_KEY = os.environ.get('BIBLE_REQUIRE_APP_KEY', '1').lower() not in ('0', 'false', 'no')
+ALLOW_CONNECTION_CONFIG = os.environ.get('BIBLE_ALLOW_CONNECTION_CONFIG', '1').lower() not in ('0', 'false', 'no')
 
 @asynccontextmanager
 async def lifespan(app):
@@ -19,12 +21,12 @@ async def lifespan(app):
     yield
 
 app = FastAPI(title='圣经讲义管理平台', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'null'], allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], allow_headers=['Authorization', 'Content-Type', 'X-App-Key'])
+app.add_middleware(CORSMiddleware, allow_origins=['https://library.fdeline.com', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'null'], allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], allow_headers=['Authorization', 'Content-Type', 'X-App-Key'])
 
 @app.middleware('http')
 async def local_client(request: Request, call_next):
     if request.method != 'OPTIONS':
-        if not APP_KEY or not secrets.compare_digest(request.headers.get('X-App-Key', ''), APP_KEY):
+        if REQUIRE_APP_KEY and (not APP_KEY or not secrets.compare_digest(request.headers.get('X-App-Key', ''), APP_KEY)):
             return JSONResponse(status_code=403, content={'detail': '请通过桌面应用访问本地服务'})
         length = request.headers.get('content-length')
         if length and int(length) > 205 * 1024 * 1024:
@@ -70,6 +72,8 @@ class Connection(BaseModel):
 
 @app.post('/api/connection')
 def configure(data: Connection, authorization: str = Header(default='')):
+    if not ALLOW_CONNECTION_CONFIG:
+        raise HTTPException(403, '线上服务的数据库连接只能由服务器管理员配置')
     with database.LOCK:
         if database.factory:
             try:

@@ -11,6 +11,7 @@ __pycache__/
 .env
 .data/
 .DS_Store
+.workbuddy/
 
 # Local-only package database credentials
 .local/
