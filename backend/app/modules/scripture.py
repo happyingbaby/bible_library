@@ -3,13 +3,58 @@ import json
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from app.database import DATA_DIR, get_db
-from app.models import Translation, Verse
+from app.models import Translation, Verse, Book, Lecture, Reference
 from app.security import admin, current_user
 from app.modules.references import ALIASES, BOOKS
 
 router = APIRouter(prefix='/api')
+
+
+@router.get('/verses/search')
+def search_verses(q: str = Query(min_length=1, max_length=200),
+                  offset: int = Query(default=0, ge=0),
+                  limit: int = Query(default=100, ge=1, le=200),
+                  user=Depends(current_user), db=Depends(get_db)):
+    keyword = q.strip()
+    if not keyword:
+        raise HTTPException(422, '请输入检索关键词')
+    # Literal substring matching: SQL wildcard characters are ordinary input.
+    predicate = Verse.text.contains(keyword, autoescape=True)
+    total = db.scalar(select(func.count(Verse.id)).where(predicate))
+    rows = db.execute(select(Verse, Translation.name, Book.name)
+        .join(Translation, Translation.id == Verse.translation_id)
+        .join(Book, Book.code == Verse.book).where(predicate)
+        .order_by(Book.position, Verse.chapter, Verse.verse, Verse.translation_id)
+        .offset(offset).limit(limit))
+    return dict(total=total, items=[dict(id=v.id, translation_id=v.translation_id,
+        translation_name=translation_name, book=v.book, book_name=book_name,
+        chapter=v.chapter, verse=v.verse, text=v.text)
+        for v, translation_name, book_name in rows])
+
+
+@router.get('/verses/lectures')
+def verse_lectures(book: str, chapter: int = Query(ge=1, le=150),
+                   verse: int = Query(ge=1, le=176),
+                   user=Depends(current_user), db=Depends(get_db)):
+    from app.modules.lectures import serialize
+    book = ALIASES.get(book.lower(), book)
+    if book not in BOOKS or chapter > BOOKS[book]['chapters']:
+        raise HTTPException(422, '章节范围错误')
+    payload = Reference.payload
+    matching = select(Reference.lecture_id).where(
+        payload['status'].as_string() == 'valid',
+        payload['book'].as_string() == book,
+        payload['chapter'].as_integer() == chapter,
+        payload['start'].as_integer() <= verse,
+        payload['end'].as_integer() >= verse)
+    stmt = select(Lecture).where(Lecture.deleted == False, Lecture.id.in_(matching))
+    if user.role != 'admin':
+        stmt = stmt.where(Lecture.published == True)
+    # IN avoids duplicates when a lecture cites the same verse repeatedly.
+    return [serialize(item, True) for item in db.scalars(
+        stmt.order_by(Lecture.updated_at.desc(), Lecture.id.desc()))]
 
 class VerseInput(BaseModel):
     book: str

@@ -61,6 +61,14 @@ with TestClient(app, headers={'X-App-Key':'mysql-smoke-key'}) as c:
     result = c.put(verse_path, json={'text':'测试经文😀', 'revision':1})
     assert result.status_code == 200, result.text
     assert c.put(verse_path, json={'text':'过期修改', 'revision':1}).status_code == 409
+    search = c.get('/api/verses/search', params={'q':'测试经文😀'}).json()
+    assert search['total'] == 1
+    assert search['items'][0]['book_name'] == '创世记'
+    related = c.get('/api/verses/lectures', params={'book':'Gen', 'chapter':1, 'verse':3})
+    assert related.status_code == 200, related.text
+    assert [item['id'] for item in related.json()] == [lecture['id']]
+    assert related.json()[0]['markdown'] == lecture['markdown']
+    assert c.get('/api/verses/lectures?book=Gen&chapter=1&verse=6').json() == []
     data = c.get('/api/backups')
     assert data.status_code == 200, data.text
     restore = c.post('/api/backups/preview',files={'file':('backup.zip',data.content)})
