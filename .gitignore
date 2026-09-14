@@ -11,6 +11,10 @@ __pycache__/
 .env
 .data/
 .DS_Store
+.workbuddy/
 
 # Local-only package database credentials
 .local/
+
+# 数据库导出不得入库（含用户密码哈希与会话 token）
+docs/bible_library.sql
