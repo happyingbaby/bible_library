@@ -12,7 +12,7 @@
 
 ```text
 ~/Library/Application Support/圣经讲义/library/
-├── database.json       # 本机 MySQL 配置，权限 0600，不加入项目或完整备份
+├── .env                # 本机 MySQL 配置，权限 0600，不加入 Git 或完整备份
 ├── originals/          # 导入原件
 ├── pending/            # 待确认的讲义导入
 ├── scripture_pending/  # 待确认的译本导入
@@ -174,12 +174,12 @@ npm run build
 
 新安装包预设 `39.102.143.118:3306`，数据库与用户名均为 `bible_library`，无需在客户端电脑安装 MySQL。
 
-1. 所有本地开发和本机构建统一读取 `.local/database-defaults.json`（不提交 Git，权限 0600）。复制 `config/database.example.json` 后填写 `host`、`port`、`username`、`password`、`database` 五项；修改后重启 `npm run dev` 或 `npm run web` 即可生效。连接页面保存时也会更新这份文件。
+1. 所有本地开发和本机构建统一读取根目录 `.env`（不提交 Git，权限 0600）。复制 `.env.example` 为 `.env` 后填写 `BIBLE_DB_HOST`、`BIBLE_DB_PORT`、`BIBLE_DB_USER`、`BIBLE_DB_PASSWORD`、`BIBLE_DB_NAME`；修改后重启 `npm run dev` 或 `npm run web` 即可生效。连接页面保存时也会更新这份文件。
 2. 公开 GitHub Actions 使用 `BIBLE_CREDENTIAL_FREE_BUILD=1` 生成不含数据库密码的中间安装包；下载到本机后再加入本机连接配置并重建内部 DMG。不得将含密码的包上传到公开仓库或构建产物。普通本机构建缺少密码时会明确失败。
 3. 在原生 Apple Silicon 和 Intel runner 分别生成 `mac-arm64.dmg` 与 `mac-x64.dmg`；应用与 Python 后端必须架构一致，CI 会核验。
-4. 连接优先级：运行时 `DATABASE_URL` → 开发配置 `BIBLE_DATABASE_CONFIG`（npm 脚本自动指向 `.local/database-defaults.json`）→ 已有应用资料目录 `database.json` → 运行时 `BIBLE_DB_PASSWORD` 配合默认参数 → 安装包预设配置。安装版已有本机配置不会被新包覆盖。
+4. 连接优先级：运行时 `DATABASE_URL` → `BIBLE_ENV_FILE` 指定的 `.env` → 应用资料目录 `.env` → 安装包内置 `.env`。安装版已有本机配置不会被新包覆盖。
 
-`.local/database-defaults.json` 是当前项目唯一需要手工修改的数据库连接文件。它包含密码，已由 `.gitignore` 排除；不得提交、粘贴到日志或上传。默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
+`.env` 是当前项目开发时唯一需要手工修改的数据库连接文件。它包含密码，已由 `.gitignore` 排除；不得提交、粘贴到日志或上传。默认直连包包含共享数据库凭据，应仅按内部应用分发；这些凭据不是终端用户的应用登录密码。网络、认证和迁移错误分别提示，不将连接失败笼统归因于芯片架构。
 
 2026-09-13：代码构建和 56 项后端隔离测试通过；GitHub Actions 运行 `34760952746` 已完成两个原生架构构建。两份本机内部 DMG 的架构、内置配置、签名及镜像完整性均已校验，Intel 包内后端通过临时 SQLite 启动与迁移验证。本次验证未连接正式数据库，Apple Silicon 包尚未在 M5 实机验收。
 
@@ -190,4 +190,4 @@ python3 scripts/finalize-internal-mac.py 下载的mac-arm64.dmg release/internal
 python3 scripts/finalize-internal-mac.py 下载的mac-x64.dmg release/internal/圣经讲义-0.1.0-mac-x64-internal.dmg --arch x64
 ```
 
-脚本从 `.local/database-defaults.json` 加入连接配置，核验应用和后端的架构，重新执行本机 ad-hoc 签名及 DMG 完整性校验。不覆盖已存在的输出文件；这些内部包未经过 Apple Developer 签名或公证。
+脚本从根目录 `.env` 加入连接配置，核验应用和后端的架构，重新执行本机 ad-hoc 签名及 DMG 完整性校验。不覆盖已存在的输出文件；这些内部包未经过 Apple Developer 签名或公证。

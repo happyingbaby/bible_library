@@ -1,10 +1,11 @@
 """Add local DB credentials to a downloaded CI DMG; never upload the output."""
 import argparse
-import json
+import os
 import plistlib
 import subprocess
 import tempfile
 from pathlib import Path
+from dotenv import load_dotenv, set_key
 
 
 def run(*args):
@@ -12,10 +13,11 @@ def run(*args):
 
 
 def finalize(source, output, arch, config_path):
-    config = json.loads(config_path.read_text())
-    expected = {'host':'39.102.143.118', 'port':3306, 'username':'bible_library', 'database':'bible_library'}
-    if any(config.get(k) != v for k,v in expected.items()) or not config.get('password'):
-        raise ValueError('Missing credentials or unexpected database target')
+    load_dotenv(config_path, override=True)
+    variables = ('BIBLE_DB_HOST','BIBLE_DB_PORT','BIBLE_DB_USER','BIBLE_DB_PASSWORD','BIBLE_DB_NAME')
+    config = {variable:os.environ.get(variable) for variable in variables}
+    if any(value is None for value in config.values()) or not config['BIBLE_DB_PASSWORD']:
+        raise ValueError('Missing database values in .env')
     if output.exists():
         raise ValueError('Output already exists; choose a new filename')
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -40,10 +42,12 @@ def finalize(source, output, arch, config_path):
         for binary in binaries:
             if run('lipo','-archs',str(binary)).decode().strip() != expected_arch:
                 raise ValueError('Application or backend architecture mismatch')
-        defaults = list((app/'Contents/Resources/backend').rglob('database-defaults.json'))
+        defaults = list((app/'Contents/Resources/backend').rglob('.env'))
         if len(defaults) != 1:
             raise ValueError('Expected exactly one bundled database configuration')
-        defaults[0].write_text(json.dumps(config),encoding='utf-8')
+        defaults[0].write_text('',encoding='utf-8')
+        for variable,value in config.items():
+            set_key(defaults[0],variable,value,quote_mode='always',encoding='utf-8')
         defaults[0].chmod(0o600)
         run('codesign','--force','--deep','--sign','-',str(app))
         run('codesign','--verify','--deep','--strict',str(app))
@@ -59,7 +63,7 @@ if __name__=='__main__':
     parser.add_argument('source',type=Path)
     parser.add_argument('output',type=Path)
     parser.add_argument('--arch',choices=['arm64','x64'],required=True)
-    parser.add_argument('--config',type=Path,default=Path(__file__).resolve().parents[1]/'.local/database-defaults.json')
+    parser.add_argument('--config',type=Path,default=Path(__file__).resolve().parents[1]/'.env')
     args=parser.parse_args()
     try:
         finalize(args.source.resolve(),args.output.resolve(),args.arch,args.config)

@@ -1,4 +1,3 @@
-import json
 import os
 import secrets
 from contextlib import asynccontextmanager
@@ -86,13 +85,7 @@ def configure(data: Connection, authorization: str = Header(default='')):
         except Exception as exc:
             raise HTTPException(400, database.connection_message(exc))
         path = database.writable_connection_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix('.tmp')
-        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, 'w') as stream:
-            json.dump(data.model_dump(), stream)
-        temporary.replace(path)
-        path.chmod(0o600)
+        database.write_connection_env(path, data.model_dump())
     return {'ok': True}
 
 for module in (accounts, lectures, scripture, backups):

@@ -1,7 +1,0 @@
-{
-  "host": "39.102.143.118",
-  "port": 3306,
-  "username": "bible_library",
-  "password": "请填写数据库密码",
-  "database": "bible_library"
-}

@@ -112,7 +112,7 @@ VITE_APP_KEY=bible-local-preview-key npm run dev:frontend
 - 使用 Markdown 作为正文权威格式，存入 MySQL，以支持持续编辑、历史记录和导出。
 - 保留原始 Word 文件以便核对；不做数据库正文与外部 `.md` 文件的双向同步。
 - 本机文件根目录为 `~/Library/Application Support/圣经讲义/library/`。
-- 开发和本机构建统一读取项目根目录 `.local/database-defaults.json`；文件含完整连接参数、权限为 `0600` 且被 Git 忽略。连接页面在开发模式下也更新此文件。安装版仍将用户修改保存为资料目录 `database.json`。
+- 开发和本机构建统一读取项目根目录 `.env`；文件含 `BIBLE_DB_*` 连接参数、权限为 `0600` 且被 Git 忽略。连接页面在开发模式下也更新此文件。安装版仍将用户修改保存为资料目录 `.env`。
 - `originals/` 保存原件，`pending/` 与 `scripture_pending/` 保存待确认导入。
 - `restore_pending/` 保存待恢复备份，`backups/` 保存恢复前的安全备份。
 - `DATABASE_URL` 优先于配置文件；独立后端使用 `BIBLE_DATA_DIR` 指定文件目录。
@@ -196,7 +196,7 @@ VITE_APP_KEY=bible-local-preview-key npm run dev:frontend
 
 ## 8. 已知限制与接手易错点
 
-- 连接表单已允许 IP／主机名；默认线上地址 `39.102.143.118:3306`，数据库及用户名 `bible_library`。开发、网页版和本机构建共用被 Git 忽略的 `.local/database-defaults.json`；`BIBLE_DB_PASSWORD` 可在打包时单独覆盖密码。运行时优先级见 README，禁止把密码写入 Git。安装版已有 `database.json` 优先于安装包默认连接。
+- 连接表单已允许 IP／主机名；默认线上地址从 `.env` 的 `BIBLE_DB_*` 字段读取。开发、网页版和本机构建共用根目录 `.env`；`BIBLE_DB_PASSWORD` 可在打包时单独覆盖密码。运行时优先级见 README，禁止把密码写入 Git。安装版已有资料目录 `.env` 优先于安装包默认连接。
 - 前端连接默认值及部分“本机／离线”文案仍沿用旧部署方式；远程配置界面的完整适配：[待补充]。
 - 用户已反馈远程连接恢复；远程认证、迁移和桌面端到端复验结果：[待补充]，不能沿用本机测试结论。
 - 开发版和安装版会共用账户与资料，启动前必须核实目标配置及 `DATABASE_URL`。

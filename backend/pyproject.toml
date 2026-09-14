@@ -12,6 +12,7 @@ dependencies = [
     "pydantic>=2.13.5,<3",
     "pymysql>=1.1,<2",
     "pypandoc-binary>=1.15,<2",
+    "python-dotenv>=1.1,<2",
     "python-multipart>=0.0.20",
     "sqlalchemy>=2.0,<3",
     "uvicorn>=0.34,<1",
