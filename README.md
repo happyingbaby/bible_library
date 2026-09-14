@@ -185,7 +185,7 @@ npm run build
 新安装包预设 `39.102.143.118:3306`，数据库与用户名均为 `bible_library`，无需在客户端电脑安装 MySQL。
 
 1. 所有本地开发和本机构建统一读取根目录 `.env`（不提交 Git，权限 0600）。复制 `.env.example` 为 `.env` 后填写 `BIBLE_DB_HOST`、`BIBLE_DB_PORT`、`BIBLE_DB_USER`、`BIBLE_DB_PASSWORD`、`BIBLE_DB_NAME`；修改后重启 `npm run dev` 或 `npm run web` 即可生效。连接页面保存时也会更新这份文件。
-2. 公开 GitHub Actions 使用 `BIBLE_CREDENTIAL_FREE_BUILD=1` 生成不含数据库密码的中间安装包；下载到本机后再加入本机连接配置并重建内部 DMG。不得将含密码的包上传到公开仓库或构建产物。普通本机构建缺少密码时会明确失败。
+2. 公开 GitHub Actions 使用 `BIBLE_CREDENTIAL_FREE_BUILD=1` 生成不含数据库密码的中间安装包；下载到本机后再加入本机连接配置并重建内部 DMG 或 Windows NSIS 安装包。不得将含密码的包上传到公开仓库或构建产物。普通本机构建缺少密码时会明确失败。
 3. 在原生 Apple Silicon 和 Intel runner 分别生成 `mac-arm64.dmg` 与 `mac-x64.dmg`；应用与 Python 后端必须架构一致，CI 会核验。
 4. 连接优先级：运行时 `DATABASE_URL` → `BIBLE_ENV_FILE` 指定的 `.env` → 应用资料目录 `.env` → 安装包内置 `.env`。安装版已有本机配置不会被新包覆盖。
 
@@ -199,5 +199,13 @@ npm run build
 python3 scripts/finalize-internal-mac.py 下载的mac-arm64.dmg release/internal/圣经讲义-0.1.0-mac-arm64-internal.dmg --arch arm64
 python3 scripts/finalize-internal-mac.py 下载的mac-x64.dmg release/internal/圣经讲义-0.1.0-mac-x64-internal.dmg --arch x64
 ```
+
+内部 Windows x64 安装包封装（使用 Windows 原生 CI 产物，可在 Mac 本机封装）：
+
+```bash
+uv run --project backend --locked python scripts/finalize-internal-windows.py 下载的windows-x64-setup.exe release/internal/圣经讲义-0.1.0-windows-x64-internal-setup.exe
+```
+
+Windows 封装脚本核验应用和 Python 后端的 PE x64 架构，读取根目录 `.env`，通过 electron-builder 的 `--prepackaged` 模式重新生成 NSIS 安装包，随后再次解包比较全部数据库连接字段。不会在 Mac 上重新编译 Windows 后端。两个封装脚本均拒绝覆盖已有输出；重新生成时请使用新的文件名或输出目录。首次封装可能需要联网下载 electron-builder 的官方工具。
 
 脚本从根目录 `.env` 加入连接配置，核验应用和后端的架构，重新执行本机 ad-hoc 签名及 DMG 完整性校验。不覆盖已存在的输出文件；这些内部包未经过 Apple Developer 签名或公证。
