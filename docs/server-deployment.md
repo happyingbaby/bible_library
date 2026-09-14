@@ -3,7 +3,7 @@
 ## 运行拓扑
 
 - 域名：`https://library.fdeline.com`
-- Nginx：宝塔安装的 Nginx，监听 80/443；80 跳转 HTTPS，443 反代 `127.0.0.1:8765`
+- Nginx：宝塔安装的 Nginx，监听 80/443；80 跳转 HTTPS，443 反代 `127.0.0.1:8765`；证书直接读取宝塔 ACME 续期目录
 - API：Docker 中的 Python 3.14 + FastAPI/Uvicorn，使用 host 网络且只监听服务器回环地址
 - 数据库：MySQL 5.7.40，连接地址、端口和账户全部读取服务器 `deploy/.env`
 - 文件：`/www/wwwroot/bible-library/data` 持久化原件、待确认文件和备份
