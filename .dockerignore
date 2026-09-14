@@ -10,3 +10,4 @@ backend/*
 !backend/uv.lock
 !deploy/
 !deploy/Dockerfile
+**/._*

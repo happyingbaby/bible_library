@@ -5,13 +5,13 @@
 - 域名：`https://library.fdeline.com`
 - Nginx：宝塔安装的 Nginx，监听 80/443；80 跳转 HTTPS，443 反代 `127.0.0.1:8765`
 - API：Docker 中的 Python 3.14 + FastAPI/Uvicorn，使用 host 网络且只监听服务器回环地址
-- 数据库：服务器本机 MySQL 5.7.40，容器通过 `127.0.0.1:3306` 访问
+- 数据库：MySQL 5.7.40，连接地址、端口和账户全部读取服务器 `deploy/.env`
 - 文件：`/www/wwwroot/bible-library/data` 持久化原件、待确认文件和备份
 
 ## 首次部署
 
 1. 将仓库内容放到 `/www/wwwroot/bible-library`。
-2. 在 `deploy/.env` 写入 `BIBLE_DB_USER`、`BIBLE_DB_PASSWORD`、`BIBLE_DB_NAME`；文件权限设为 `0600`。`BIBLE_DB_HOST` 和端口由 Compose 固定为服务器本机地址。
+2. 在 `deploy/.env` 写入 `BIBLE_DB_HOST`、`BIBLE_DB_PORT`、`BIBLE_DB_USER`、`BIBLE_DB_PASSWORD`、`BIBLE_DB_NAME`；文件权限设为 `0600`。
 3. 执行 `docker compose -f deploy/docker-compose.yml build api`。
 4. 执行 `docker compose -f deploy/docker-compose.yml up -d api`。
 5. 将 `deploy/library.fdeline.com.nginx.conf` 安装为宝塔 Nginx 站点配置，签发并安装 `library.fdeline.com` 证书后重载 Nginx。

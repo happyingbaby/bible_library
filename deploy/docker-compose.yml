@@ -12,8 +12,6 @@ services:
       BIBLE_HOST: 127.0.0.1
       BIBLE_PORT: 8765
       BIBLE_DATA_DIR: /data
-      BIBLE_DB_HOST: 127.0.0.1
-      BIBLE_DB_PORT: 3306
       BIBLE_REQUIRE_APP_KEY: "0"
       BIBLE_ALLOW_CONNECTION_CONFIG: "0"
     volumes:
