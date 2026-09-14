@@ -7,7 +7,7 @@ url = os.environ.get('MYSQL_TEST_URL')
 if not url or 'bible_test' not in url:
     raise SystemExit('Set MYSQL_TEST_URL to the disposable bible_test database')
 os.environ['DATABASE_URL'] = url
-os.environ['BIBLE_DATA_DIR'] = '/private/tmp/bible-mysql-smoke'
+os.environ['BIBLE_DATA_DIR'] = os.environ.get('MYSQL_TEST_DATA_DIR', '/private/tmp/bible-mysql-smoke')
 os.environ['BIBLE_APP_KEY'] = 'mysql-smoke-key'
 from fastapi.testclient import TestClient
 from app.main import app
@@ -73,6 +73,13 @@ with TestClient(app, headers={'X-App-Key':'mysql-smoke-key'}) as c:
     assert note.status_code == 200, note.text
     note = note.json()
     assert c.get('/api/annotations').json()[0]['content'] == 'MySQL 批注😀'
+    assert c.get(f"/api/annotations/{note['id']}").json()['paragraph_index'] == 1
+    private_backup = c.get('/api/backups')
+    assert private_backup.status_code == 200, private_backup.text
+    private_preview = c.post('/api/backups/preview', files={'file':('backup.zip', private_backup.content)})
+    assert private_preview.status_code == 200, private_preview.text
+    assert c.post('/api/backups/restore', json={'preview_id':private_preview.json()['preview_id']}).status_code == 409
+    assert c.get(f"/api/annotations/{note['id']}").json()['content'] == 'MySQL 批注😀'
     assert c.put(f"/api/annotations/{note['id']}",json=dict(content='修改😀',revision=1)).status_code == 200
     assert c.put(f"/api/annotations/{note['id']}",json=dict(content='过期',revision=1)).status_code == 409
     assert c.delete(f"/api/annotations/{note['id']}?revision=2").status_code == 200
@@ -88,4 +95,4 @@ with TestClient(app, headers={'X-App-Key':'mysql-smoke-key'}) as c:
     c.headers['Authorization'] = 'Bearer '+result.json()['token']
     assert c.get('/api/lectures').json()[0]['title'] == 'MySQL 中文讲义😀'
     assert c.get(verse_path.rsplit('/', 1)[0]).json()['verses'][0]['text'] == '测试经文😀'
-    print('MySQL migration, utf8mb4, reference index, backup restore and session revocation passed.')
+    print('MySQL migration, utf8mb4, reference index, annotation CRUD/anchor/conflicts, private-note restore protection, backup restore and session revocation passed.')
