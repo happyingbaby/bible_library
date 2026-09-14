@@ -65,7 +65,7 @@ npm run package:win
 - 2026-09-14 已静态验证 macOS ARM64 和 Windows x64 安装包的目标架构、线上 API 地址及不含后端；尚未在目标设备完成安装登录验收。
 - 两个平台均未做受信任的商业代码签名；macOS 没有 Developer ID 公证，Windows 可能出现 SmartScreen 提示。
 
-`backend/scripts/preview_backend.py`、`seed_preview.py` 和固定 `VITE_APP_KEY` 是本地后端时期留下的隔离预览工具；由于当前前端 API 地址已固定为线上域名，不能直接用它们完成端到端 UI 隔离验证。新迭代应先增加明确的开发 API 地址注入机制，再恢复浏览器隔离流程。
+隔离预览必须显式指定测试 `DATABASE_URL` 和 `BIBLE_DATA_DIR` 后启动 `backend/scripts/preview_backend.py`，再用 `VITE_API_BASE=/api VITE_APP_KEY=bible-local-preview-key npm run dev:frontend` 启动前端。Vite 将 `/api` 代理到本机 8765；开发变量仅在 DEV 模式生效，生产构建仍固定使用线上 API。
 
 ## 4. 核心目录与职责
 
@@ -86,7 +86,8 @@ npm run package:win
 - `backend/app/modules/scripture.py`：译本预览确认、差异校验和经节查询。
 - `backend/app/modules/backups.py`：备份生成、验证、预览及恢复。
 - `backend/app/collectors/lxfyt.py`、`backend/scripts/crawl_scripture.py`：来源限定的网站采集器与命令行入口。
-- `backend/migrations/`：Alembic 迁移；当前版本链为 `0001` → `0002`（两约／书卷／章节目录）→ `0003`（作者与讲道日期）。
+- `backend/migrations/`：Alembic 迁移；当前版本链为 `0001` → `0002`（两约／书卷／章节目录）→ `0003`（作者与讲道日期）→ `0004`（个人批注，尚未部署生产）。
+- `backend/app/modules/annotations.py`、`paragraphs.py` 和 `frontend/src/Annotations.tsx`：个人批注权限、段落绑定及批注工作区；说明见 `docs/个人批注.md`。
 - `backend/tests/`：隔离测试夹具及核心业务回归。
 - `frontend/vite.config.ts`、`frontend/tsconfig.json`：前端构建与类型检查配置。
 - `backend/scripts/`：后端打包、隔离预览、Docker 数据库初始化与集成验证脚本。
@@ -159,6 +160,9 @@ npm run package:win
 
 ### 安全与备份
 
+- 个人批注由会话绑定用户，管理员也无权通过批注接口查看或修改他人的批注。原段落改写或重复匹配无法确认时保留笔记并提示定位失效，不猜测跳转。
+- 个人批注不进入管理员可下载的资料备份；数据库存在批注时阻止应用内整库恢复，避免账户归属错配。完整批注灾备依赖服务器数据库备份，尚无个人批注导出导入。
+
 - 生产 FastAPI 在服务器只监听 `127.0.0.1:8765`，公网只暴露 Nginx 的 HTTPS；不得把 Uvicorn 端口或 MySQL 端口作为客户端 API 暴露。
 - Electron 保持 `contextIsolation: true`、`nodeIntegration: false`、`sandbox: true`。
 - 桌面端保留受限 IPC 和 CSP，外部网页交由系统浏览器处理；`X-App-Key` 仅为本地后端兼容机制，当前生产客户端和线上 API 不使用它。
@@ -192,7 +196,7 @@ npm run package:win
 
 - `README.md` 仍混有“本机后端、客户端直连 MySQL、四架构安装包”等旧说明；在新迭代更新 README 前，以本文件、`frontend/src/api.ts` 和 `docs/server-deployment.md` 为准。
 - `scripts/web.cjs`、本地预览脚本、数据库连接页面的后端兼容代码和内部直连安装包封装脚本尚未完全清理；不要误判它们仍是生产入口。
-- API 基址目前硬编码在 `frontend/src/api.ts`，没有开发／预发布环境切换；直接运行前端会访问生产服务，端到端开发隔离是下一迭代必须优先解决的工程问题。
+- 生产 API 基址固定；已增加仅开发模式生效的 `VITE_API_BASE` 与 `VITE_APP_KEY`，但直接运行前端而不配置这两个变量仍会访问生产服务。
 - 服务端原件与数据库集中后可被多台客户端访问，但没有多人同时编辑的冲突协作体验；讲义 revision 只能拒绝过期保存，不会自动合并。
 - 当前只交付并静态验证 macOS ARM64 和 Windows x64；未在 Apple Silicon、Windows 11 实机完成安装登录，未签名／公证，不能称为正式公开发行包。
 - 首版不支持 PDF/OCR、复杂 Word 排版还原、跨章引用、云同步或多人实时协作。
@@ -221,3 +225,5 @@ npm run package:win
 - 新版本首先处理运行模式一致性：提供可控的开发／测试 API 地址，恢复真正隔离的端到端验证，并清理 README、网页入口和旧直连数据库打包说明之间的冲突。
 - 功能迭代必须继续保持账户权限、讲义 revision、引用索引、译本 revision、备份恢复和生产数据安全边界；不能为了界面便利绕过后端校验。
 - 每一轮修改完成后更新本基线中的“已确认能力／已知限制”，运行相关验证并创建本地提交；未经明确要求不部署生产、不推送、不运行正式采集或恢复。
+- 2026-09-14 本地新增个人段落批注：支持本人增查改删、版本冲突检查、列表反向跳转与段落高亮；段落改写或重复匹配不确定时保留批注但不猜测位置。使用与备份边界见 `docs/个人批注.md`，尚未部署生产。
+- 本轮已通过 76 项隔离后端测试及 TypeScript／Vite 构建，隔离浏览器已验证新增、编辑和反向导航；真实 MySQL 迁移与业务验证因本机 Docker daemon 未启动而待补跑，不能据 SQLite 通过宣称 MySQL 已验收。

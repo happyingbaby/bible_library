@@ -12,7 +12,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy import Date, DateTime, delete, select
 from app.database import DATA_DIR, get_db
-from app.models import Base, Guard, User, Session, Lecture, History, Reference, Translation, Verse, now
+from app.models import Base, Guard, User, Session, Lecture, History, Reference, Translation, Verse, Annotation, now
 from app.security import admin
 
 router = APIRouter(prefix='/api/backups')
@@ -123,6 +123,10 @@ def restore(data: Restore, user=Depends(admin), db=Depends(get_db)):
         raise HTTPException(403, '不能确认其他用户的恢复')
     raw = path.read_bytes()
     payload = validate(raw)
+    # Personal notes cannot be exported or reassigned by another application user.
+    # A full account/library replacement requires a server-level recovery procedure.
+    if db.scalar(select(Annotation.id).limit(1)) is not None:
+        raise HTTPException(409, '资料库含个人批注，应用内恢复已阻止；请由服务器维护者备份数据库并处理恢复，避免批注丢失或归属错配。')
     directory = DATA_DIR / 'backups'
     directory.mkdir(exist_ok=True)
     safety_path = directory / ('before-restore-' + now().strftime('%Y%m%d-%H%M%S-') + uuid.uuid4().hex[:8] + '.zip')

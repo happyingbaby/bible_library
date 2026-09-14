@@ -21,7 +21,7 @@ candidate = sa.create_engine(url)
 assert not sa.inspect(candidate).get_table_names(), 'Use a fresh bible_test database'
 old = sa.MetaData()
 for table in Base.metadata.sorted_tables:
-    if not table.name.startswith('bible_'):
+    if not table.name.startswith('bible_') and table.name != 'annotations':
         table.to_metadata(old)
 verse_table = old.tables['verses']
 fk = next(c for c in verse_table.constraints if c.name == 'fk_verses_chapter')
@@ -69,6 +69,13 @@ with TestClient(app, headers={'X-App-Key':'mysql-smoke-key'}) as c:
     assert [item['id'] for item in related.json()] == [lecture['id']]
     assert related.json()[0]['markdown'] == lecture['markdown']
     assert c.get('/api/verses/lectures?book=Gen&chapter=1&verse=6').json() == []
+    note = c.post('/api/annotations', json=dict(lecture_id=lecture['id'], lecture_revision=lecture['revision'], paragraph_index=1, content='MySQL 批注😀'))
+    assert note.status_code == 200, note.text
+    note = note.json()
+    assert c.get('/api/annotations').json()[0]['content'] == 'MySQL 批注😀'
+    assert c.put(f"/api/annotations/{note['id']}",json=dict(content='修改😀',revision=1)).status_code == 200
+    assert c.put(f"/api/annotations/{note['id']}",json=dict(content='过期',revision=1)).status_code == 409
+    assert c.delete(f"/api/annotations/{note['id']}?revision=2").status_code == 200
     data = c.get('/api/backups')
     assert data.status_code == 200, data.text
     restore = c.post('/api/backups/preview',files={'file':('backup.zip',data.content)})

@@ -134,6 +134,8 @@ def render(markdown):
     # Offline first: imported image URLs are not fetched.
     md.renderer.rules['image'] = lambda tokens, idx, options, env: '<span class="unsupported">[图片：' + html.escape(tokens[idx].content) + ']</span>'
     tokens = md.parse(markdown)
+    from app.modules.paragraphs import mark_paragraphs
+    paragraphs = mark_paragraphs(tokens)
     # Inline positions are stable per Markdown block, including repeated references.
     for block_index, token in enumerate(tokens):
         if token.type == 'inline':
@@ -144,4 +146,4 @@ def render(markdown):
         env['inline_index'] = tokens[idx].meta.get('block_index', 0)
         return base_text(tokens, idx, options, env)
     md.renderer.rules['text'] = positioned
-    return {'html': md.renderer.render(tokens, md.options, {}), 'references': refs}
+    return {'html': md.renderer.render(tokens, md.options, {}), 'references': refs, 'paragraphs': paragraphs}

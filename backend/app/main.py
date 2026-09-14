@@ -9,7 +9,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import SQLAlchemyError
 from app import database
 from app.models import User
-from app.modules import accounts, backups, lectures, scripture
+from app.modules import accounts, backups, lectures, scripture, annotations
 
 APP_KEY = os.environ.get('BIBLE_APP_KEY', '')
 REQUIRE_APP_KEY = os.environ.get('BIBLE_REQUIRE_APP_KEY', '1').lower() not in ('0', 'false', 'no')
@@ -92,5 +92,5 @@ def configure(data: Connection, authorization: str = Header(default='')):
         database.write_connection_env(path, data.model_dump())
     return {'ok': True}
 
-for module in (accounts, lectures, scripture, backups):
+for module in (accounts, lectures, scripture, backups, annotations):
     app.include_router(module.router)

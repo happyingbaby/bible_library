@@ -1,0 +1,6 @@
+.annotations-workspace{display:flex;flex:1;min-width:0;height:100%;overflow:hidden;background:#faf9f6}
+.annotation-reading{flex:1;min-width:0;overflow:auto;padding:32px 40px}.annotation-reading header{margin-bottom:28px}.annotation-reading h1{font-size:28px}
+.annotation-panel{width:350px;flex-shrink:0;overflow:auto;border-left:1px solid #ddd9ce;padding:24px;background:#fff}.annotation-panel select,.annotation-panel textarea{width:100%;margin:8px 0 16px}.annotation-panel textarea{min-height:120px;resize:vertical}
+.annotation-prose [data-paragraph-index]{cursor:pointer;scroll-margin:80px;transition:background .15s;outline-offset:5px}.annotation-prose [data-paragraph-index]:hover{background:#f0eee6}.annotation-prose .annotation-marked{border-left:3px solid #958256;padding-left:12px}.annotation-prose .annotation-selected{background:#fff0bd;outline:2px solid #ab8b3e}
+.annotation-card{padding:16px 0;border-bottom:1px solid #e5e1d8;overflow-wrap:anywhere}.annotation-card.active{background:#fff9e6}.annotation-card h3{font-size:15px}.annotation-card blockquote{margin:8px 0;padding:8px 12px;background:#f5f3ed;max-height:100px;overflow:auto;font-size:13px}.annotation-content{white-space:pre-wrap}.annotation-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+@media(max-width:1100px){.annotation-reading{padding:24px}.annotation-panel{width:300px}}

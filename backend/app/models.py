@@ -56,6 +56,22 @@ class Lecture(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
+class Annotation(Base):
+    __tablename__ = 'annotations'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), index=True)
+    lecture_id: Mapped[int] = mapped_column(ForeignKey('lectures.id'), index=True)
+    paragraph_key: Mapped[str] = mapped_column(String(64))
+    paragraph_index: Mapped[int] = mapped_column(Integer)
+    paragraph_count: Mapped[int] = mapped_column(Integer)
+    lecture_revision: Mapped[int] = mapped_column(Integer)
+    quote: Mapped[str] = mapped_column(Text().with_variant(LONGTEXT(), 'mysql'))
+    content: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
 class History(Base):
     __tablename__ = 'histories'
     id: Mapped[int] = mapped_column(primary_key=True)
